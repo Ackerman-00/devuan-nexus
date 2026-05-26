@@ -19,10 +19,18 @@ jobs:
     container:
       image: devuan/devuan:ceres
     steps:
-      - name: Install dependencies
+      - name: Install dependencies & GitHub CLI
         run: |
           apt-get update
-          apt-get install -y git curl jq devscripts
+          # Install core tools and keyring managers
+          apt-get install -y git curl jq devscripts ca-certificates apt-transport-https gnupg
+          
+          # Inject GitHub CLI repository into Devuan container
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          
+          apt-get update && apt-get install -y gh
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -49,16 +57,26 @@ jobs:
             [ ! -f "$pkg_name/nexus.conf" ] && continue
             [ ! -f "$pkg_name/debian/changelog" ] && continue
 
-            # Extract variables cleanly, stripping carriage returns
+            # Parse variables from nexus.conf cleanly
             PKG_TYPE=$(grep '^TYPE=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
-            BASE_VERSION=$(grep '^BASE_VERSION=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
             REPO=$(grep '^REPO=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
             BRANCH=$(grep '^BRANCH=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+            BASE_VERSION=$(grep '^BASE_VERSION=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r' || true)
             
             UPSTREAM_URL="https://github.com/${REPO}.git"
             echo "--- Scanning $pkg_name ($UPSTREAM_URL) ---"
 
             if [ "$PKG_TYPE" = "git" ]; then
+              # Resolve missing BASE_VERSION by querying the upstream tag
+              if [ -z "$BASE_VERSION" ]; then
+                LATEST_TAG=$(curl -sSL -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name | sed 's/^v//')
+                if [ "$LATEST_TAG" = "null" ] || [ -z "$LATEST_TAG" ]; then
+                  BASE_VERSION="0.0.0"
+                else
+                  BASE_VERSION="$LATEST_TAG"
+                fi
+              fi
+
               # Fetch latest commit hash
               LATEST_HASH=$(git ls-remote "$UPSTREAM_URL" "$BRANCH" | awk '{print substr($1,1,7)}')
               if [ -z "$LATEST_HASH" ]; then
@@ -72,7 +90,6 @@ jobs:
                 echo "  [+] New commit detected! Bumping to $LATEST_HASH..."
                 
                 DATE_STR=$(date -u +%Y%m%d)
-                # Master formatting: 26.04+git20260526.abcdef1-1
                 NEW_VERSION="${BASE_VERSION}+git${DATE_STR}.${LATEST_HASH}-1"
                 
                 cd "$pkg_name"
