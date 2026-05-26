@@ -99,7 +99,7 @@ jobs:
           echo ">>> Moving compiled artifacts to public pool..."
           mv *.deb public/devuan/
 
-      - name: Generate APT Repository & Sign
+      - name: Generate APT Repository Metadata
         run: |
           cd public/devuan
           
@@ -122,12 +122,7 @@ jobs:
           echo ">>> Generating Release file..."
           apt-ftparchive -c apt-release.conf release . > Release
           
-          echo ">>> Signing Repository..."
-          echo "${{ secrets.APT_PRIVATE_KEY }}" > /tmp/private.key
-          gpg --import /tmp/private.key
-          gpg --default-key "${{ secrets.APT_KEY_EMAIL }}" -abs -o Release.gpg Release
-          gpg --default-key "${{ secrets.APT_KEY_EMAIL }}" --clearsign -o InRelease Release
-          rm /tmp/private.key apt-release.conf
+          rm -f apt-release.conf
 
       - name: Upload to GitHub Release
         env:
@@ -149,7 +144,7 @@ jobs:
           }
 
           echo ">>> Uploading APT metadata..."
-          for file in Packages Packages.gz Release Release.gpg InRelease; do
+          for file in Packages Packages.gz Release; do
             [ -f "$file" ] && retry_upload "$file"
           done
 
