@@ -1,3 +1,9 @@
+niri-git (26.04+git20260526.4294948-1) ceres; urgency=medium
+
+  * Automated git bump to 4294948
+
+ -- Nexus Build Bot <actions@github.com>  Tue, 26 May 2026 17:11:54 +0000
+
 niri-git (26.04+git20260526.0000000-1) ceres; urgency=medium
 
   * Initial Devuan-Nexus build.
