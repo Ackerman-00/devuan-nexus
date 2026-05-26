@@ -22,7 +22,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y curl git wget build-essential devscripts equivs \
-                             apt-utils apt-ftparchive gnupg ca-certificates
+                             apt-utils gnupg ca-certificates
 
       - name: Install GitHub CLI
         run: |
