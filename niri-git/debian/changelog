@@ -1,5 +1,8 @@
-niri-git (26.04+git20260526.abcdef1-1) ceres; urgency=medium
+niri-git (26.04+git20260526.0000000-1) ceres; urgency=medium
 
   * Initial Devuan-Nexus build.
+  * Built without systemd feature; using elogind/libseat backend.
+  * Enabled dinit user session integration.
+  * Optimized for x86-64-v3 with -O3.
 
  -- Ackerman <ackerman@nexus.local>  Tue, 26 May 2026 21:38:48 +0600

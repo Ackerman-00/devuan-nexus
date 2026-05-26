@@ -1,3 +1,4 @@
+# YAML 1.2
 name: Devuan Check Updates
 
 on:
@@ -22,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: devuan/devuan:ceres
-    # ↓↓↓ FIX: all run steps inside a container default to sh, not bash
     defaults:
       run:
         shell: bash
@@ -94,7 +94,9 @@ jobs:
                 NEW_VERSION="${BASE_VERSION}+git${DATE_STR}.${LATEST_HASH}-1"
 
                 cd "$pkg_name"
-                dch -v "$NEW_VERSION" -D ceres --force-distribution "Automated git bump to $LATEST_HASH"
+                # -b forces the version bump even if dpkg thinks the new version is lower
+                # (needed because placeholder hashes like 0000000 sort before real hashes)
+                dch -b -v "$NEW_VERSION" -D ceres --force-distribution "Automated git bump to $LATEST_HASH"
                 cd ..
 
                 CHANGED_PKGS="$CHANGED_PKGS $pkg_name "
