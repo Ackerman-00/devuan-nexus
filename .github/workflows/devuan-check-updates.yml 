@@ -1,0 +1,107 @@
+name: Devuan Check Updates
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: devuan-check-updates-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  scan-and-bump:
+    runs-on: ubuntu-latest
+    container:
+      image: devuan/devuan:ceres
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y git curl jq devscripts
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Scan APIs & Bump Changelogs
+        id: scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBFULLNAME: "Nexus Build Bot"
+          DEBEMAIL: "actions@github.com"
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory '*'
+          
+          CHANGED_PKGS=""
+
+          for pkg_dir in */ ; do
+            pkg_name=$(basename "$pkg_dir")
+            [ "$pkg_name" = ".github" ] && continue
+            [ ! -f "$pkg_name/nexus.conf" ] && continue
+            [ ! -f "$pkg_name/debian/changelog" ] && continue
+
+            # Extract variables cleanly, stripping carriage returns
+            PKG_TYPE=$(grep '^TYPE=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+            BASE_VERSION=$(grep '^BASE_VERSION=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+            REPO=$(grep '^REPO=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+            BRANCH=$(grep '^BRANCH=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+            
+            UPSTREAM_URL="https://github.com/${REPO}.git"
+            echo "--- Scanning $pkg_name ($UPSTREAM_URL) ---"
+
+            if [ "$PKG_TYPE" = "git" ]; then
+              # Fetch latest commit hash
+              LATEST_HASH=$(git ls-remote "$UPSTREAM_URL" "$BRANCH" | awk '{print substr($1,1,7)}')
+              if [ -z "$LATEST_HASH" ]; then
+                echo "  [!] Failed to fetch remote hash."
+                continue
+              fi
+
+              CURR_VERSION=$(dpkg-parsechangelog -l "$pkg_name/debian/changelog" -S Version)
+              
+              if [[ "$CURR_VERSION" != *"$LATEST_HASH"* ]]; then
+                echo "  [+] New commit detected! Bumping to $LATEST_HASH..."
+                
+                DATE_STR=$(date -u +%Y%m%d)
+                # Master formatting: 26.04+git20260526.abcdef1-1
+                NEW_VERSION="${BASE_VERSION}+git${DATE_STR}.${LATEST_HASH}-1"
+                
+                cd "$pkg_name"
+                dch -v "$NEW_VERSION" -D ceres --force-distribution "Automated git bump to $LATEST_HASH"
+                cd ..
+                
+                CHANGED_PKGS="$CHANGED_PKGS $pkg_name"
+              else
+                echo "  [-] Already up to date."
+              fi
+            fi
+          done
+
+          if [ -n "$CHANGED_PKGS" ]; then
+            echo "updates_found=true" >> "$GITHUB_OUTPUT"
+            echo "package_list=$CHANGED_PKGS" >> "$GITHUB_OUTPUT"
+            
+            git add .
+            git commit -m "auto-update: changelog bumps $(date -u '+%Y-%m-%d')"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "updates_found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Devuan Build Relay
+        if: steps.scan.outputs.updates_found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run "Devuan Build Relay" \
+            --ref "${{ github.ref_name }}" \
+            -f package_list="${{ steps.scan.outputs.package_list }}"

@@ -1,0 +1,5 @@
+niri-git (26.04+git20260526.abcdef1-1) ceres; urgency=medium
+
+  * Initial Devuan-Nexus build.
+
+ -- Ackerman <ackerman@nexus.local>  Tue, 26 May 2026 21:38:48 +0600

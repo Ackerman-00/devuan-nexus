@@ -1,0 +1,25 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo fetch
+	cargo build --release
+
+override_dh_auto_install:
+	mkdir -p debian/niri-git/usr/bin/
+	mkdir -p debian/niri-git/usr/share/wayland-sessions/
+	mkdir -p debian/niri-git/usr/share/xdg-desktop-portal/
+	
+	cp -vf target/release/niri debian/niri-git/usr/bin/niri
+	chmod 755 debian/niri-git/usr/bin/niri
+	
+	cp -vf resources/niri-session debian/niri-git/usr/bin/niri-session
+	chmod 755 debian/niri-git/usr/bin/niri-session
+	
+	cp -vf resources/niri.desktop debian/niri-git/usr/share/wayland-sessions/niri.desktop
+	cp -vf resources/niri-portals.conf debian/niri-git/usr/share/xdg-desktop-portal/niri-portals.conf

@@ -1,0 +1,31 @@
+Source: niri-git
+Section: x11
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+ cargo,
+ rustc,
+ clang,
+ libclang-dev,
+ libudev-dev,
+ libgbm-dev,
+ libxkbcommon-dev,
+ libegl1-mesa-dev,
+ libwayland-dev,
+ libinput-dev,
+ libdbus-1-dev,
+ libelogind-dev,
+ libseat-dev,
+ libpipewire-0.3-dev,
+ libpango1.0-dev,
+ libdisplay-info-dev
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: niri-git
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, seatd
+Conflicts: niri
+Provides: niri
+Description: A scrollable-tiling Wayland compositor.
+ Highly optimized bleeding-edge build for Devuan without systemd.

@@ -1,0 +1,158 @@
+name: Devuan Build Relay
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_list:
+        description: 'Space-separated list of packages to build'
+        required: true
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build-and-index:
+    runs-on: ubuntu-latest
+    container:
+      image: devuan/devuan:ceres
+      options: --privileged
+    steps:
+      - name: Install System Utilities
+        run: |
+          apt-get update
+          apt-get install -y curl git wget build-essential devscripts equivs \
+                             apt-utils apt-ftparchive gnupg
+
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update && apt-get install -y gh
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse Queue
+        id: queue
+        run: |
+          LIST="${{ github.event.inputs.package_list }}"
+          read -r -a PKGS <<< "$LIST"
+          TARGET_PKG="${PKGS}"
+          REMAINING="${PKGS[@]:1}"
+          
+          echo "TARGET_PKG=$TARGET_PKG" >> "$GITHUB_ENV"
+          echo "REMAINING_PKGS=$REMAINING" >> "$GITHUB_ENV"
+
+      - name: Restore Rolling Release Binaries
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p public/devuan
+          echo ">>> Downloading existing .deb pool..."
+          gh release download rolling -p "*.deb" --repo ${{ github.repository }} --dir public/devuan 2>/dev/null || true
+
+      - name: Fetch Latest Source and Build Package
+        run: |
+          TARGET="${{ env.TARGET_PKG }}"
+          REPO=$(grep '^REPO=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+          BRANCH=$(grep '^BRANCH=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
+          UPSTREAM_URL="https://github.com/${REPO}.git"
+          
+          echo ">>> Cloning $TARGET source from branch $BRANCH..."
+          git clone -b "$BRANCH" "$UPSTREAM_URL" build-src
+          
+          echo ">>> Injecting Debian configuration..."
+          cp -a "$TARGET/debian" build-src/
+          
+          cd build-src
+          
+          echo ">>> Installing Build Dependencies (Resolving via apt)..."
+          mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control
+          
+          echo ">>> Compiling Debian Package (.deb)..."
+          dpkg-buildpackage -b -uc -us
+          
+          cd ..
+          echo ">>> Moving compiled artifacts to public pool..."
+          mv *.deb public/devuan/
+
+      - name: Generate APT Repository & Sign
+        run: |
+          cd public/devuan
+          
+          # Create strict configuration for apt-ftparchive to prevent APT warnings
+          cat > apt-release.conf << 'EOF'
+          APT::FTPArchive::Release {
+            Origin "Devuan-Nexus";
+            Label "Devuan-Nexus";
+            Suite "rolling";
+            Codename "ceres";
+            Architectures "amd64";
+            Components "main";
+            Description "Automated Rolling Devuan Repository";
+          };
+          EOF
+          
+          echo ">>> Generating Packages index..."
+          apt-ftparchive packages . > Packages
+          gzip -k -f Packages
+          
+          echo ">>> Generating Release file..."
+          apt-ftparchive -c apt-release.conf release . > Release
+          
+          echo ">>> Signing Repository..."
+          echo "${{ secrets.APT_PRIVATE_KEY }}" > /tmp/private.key
+          gpg --import /tmp/private.key
+          gpg --default-key "${{ secrets.APT_KEY_EMAIL }}" -abs -o Release.gpg Release
+          gpg --default-key "${{ secrets.APT_KEY_EMAIL }}" --clearsign -o InRelease Release
+          rm /tmp/private.key apt-release.conf
+
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release view rolling --repo "$REPO" 2>/dev/null || \
+            gh release create rolling --repo "$REPO" --title "Devuan Nexus Rolling Binaries" --prerelease
+
+          cd public/devuan
+          
+          retry_upload() {
+            for i in 1 2 3; do
+              gh release upload rolling "$1" --repo "$REPO" --clobber 2>&1 && return 0
+              sleep 5
+            done
+            echo "::error::Upload failed after 3 attempts: $1"
+            return 1
+          }
+
+          echo ">>> Uploading APT metadata..."
+          for file in Packages Packages.gz Release Release.gpg InRelease; do
+            [ -f "$file" ] && retry_upload "$file"
+          done
+
+          echo ">>> Purging old versions and uploading new .deb artifacts..."
+          for file in *.deb; do
+            [ -e "$file" ] || continue
+            
+            PN="${file%%_*}"
+            OLD_ASSETS=$(gh release view rolling --json assets --jq ".assets[].name" --repo "$REPO" | grep -E "^${PN}_.*\.deb$" || true)
+            for asset in $OLD_ASSETS; do
+              gh release delete-asset rolling "$asset" --repo "$REPO" -y || true
+            done
+            
+            retry_upload "$file"
+          done
+
+      - name: Trigger Next in Queue
+        if: env.REMAINING_PKGS != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run "Devuan Build Relay" \
+            --ref "${GITHUB_REF_NAME}" \
+            -f package_list="${{ env.REMAINING_PKGS }}"
