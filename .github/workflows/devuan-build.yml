@@ -22,7 +22,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y curl git wget build-essential devscripts equivs \
-                             apt-utils apt-ftparchive gnupg
+                             apt-utils apt-ftparchive gnupg ca-certificates
 
       - name: Install GitHub CLI
         run: |
@@ -36,16 +36,28 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify Rust Toolchain
+        run: |
+          rustc --version
+          RUST_VERSION=$(rustc --version | awk '{print $2}')
+          REQUIRED="1.85"
+          if [ "$(printf '%s\n' "$REQUIRED" "$RUST_VERSION" | sort -V | head -n1)" != "$REQUIRED" ]; then
+            echo "::error::rustc $RUST_VERSION is too old. niri requires >= 1.85"
+            exit 1
+          fi
+          echo "rustc $RUST_VERSION meets minimum $REQUIRED"
+
       - name: Parse Queue
         id: queue
         run: |
           LIST="${{ github.event.inputs.package_list }}"
           read -r -a PKGS <<< "$LIST"
-          TARGET_PKG="${PKGS}"
+          TARGET_PKG="${PKGS[0]}"
           REMAINING="${PKGS[@]:1}"
           
           echo "TARGET_PKG=$TARGET_PKG" >> "$GITHUB_ENV"
           echo "REMAINING_PKGS=$REMAINING" >> "$GITHUB_ENV"
+          echo ">>> Building $TARGET_PKG (remaining: $REMAINING)"
 
       - name: Restore Rolling Release Binaries
         env:
@@ -84,7 +96,6 @@ jobs:
         run: |
           cd public/devuan
           
-          # Create strict configuration for apt-ftparchive to prevent APT warnings
           cat > apt-release.conf << 'EOF'
           APT::FTPArchive::Release {
             Origin "Devuan-Nexus";

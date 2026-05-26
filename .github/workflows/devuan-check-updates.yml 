@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch:
+  push:
+    paths:
+      - '*/nexus.conf'
+      - '*/debian/changelog'
 
 concurrency:
   group: devuan-check-updates-${{ github.ref }}
@@ -22,7 +26,7 @@ jobs:
       - name: Install dependencies & GitHub CLI
         run: |
           apt-get update
-          apt-get install -y git curl jq devscripts ca-certificates apt-transport-https gnupg
+          apt-get install -y git curl jq devscripts dpkg-dev ca-certificates apt-transport-https gnupg
           
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg

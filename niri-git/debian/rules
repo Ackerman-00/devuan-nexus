@@ -2,24 +2,37 @@
 
 export DH_VERBOSE = 1
 export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3
+export NIRI_BUILD_COMMIT = $(shell git -C build-src rev-parse --short=7 HEAD 2>/dev/null || echo "unknown")
 
 %:
 	dh $@
 
 override_dh_auto_build:
 	cargo fetch
-	cargo build --release
+	cargo build --release --no-default-features --features "dbus,xdp-gnome-screencast,dinit"
 
 override_dh_auto_install:
 	mkdir -p debian/niri-git/usr/bin/
 	mkdir -p debian/niri-git/usr/share/wayland-sessions/
 	mkdir -p debian/niri-git/usr/share/xdg-desktop-portal/
-	
+	mkdir -p debian/niri-git/usr/lib/dinit.d/user/
+
 	cp -vf target/release/niri debian/niri-git/usr/bin/niri
 	chmod 755 debian/niri-git/usr/bin/niri
-	
+
 	cp -vf resources/niri-session debian/niri-git/usr/bin/niri-session
 	chmod 755 debian/niri-git/usr/bin/niri-session
-	
+
 	cp -vf resources/niri.desktop debian/niri-git/usr/share/wayland-sessions/niri.desktop
 	cp -vf resources/niri-portals.conf debian/niri-git/usr/share/xdg-desktop-portal/niri-portals.conf
+
+	# dinit user services (systemd-free session integration)
+	cp -vf resources/dinit/niri debian/niri-git/usr/lib/dinit.d/user/niri
+	cp -vf resources/dinit/niri.target debian/niri-git/usr/lib/dinit.d/user/niri.target
+
+	# PATCH: Replace the useless else clause in niri-session with a working
+	# fallback for sysvinit/openrc/runit (non-systemd, non-dinit systems).
+	# niri --session imports environment into D-Bus but does NOT create a
+	# D-Bus session bus, so it MUST be wrapped with dbus-run-session.
+	sed -i 's/^else echo "No systemd or dinit detected, please use niri --session instead."$$/else\n    exec dbus-run-session niri --session/' \
+		debian/niri-git/usr/bin/niri-session

@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Ackerman <ackerman@nexus.local>
 Build-Depends: debhelper-compat (= 13),
  cargo,
- rustc,
+ rustc (>= 1.85),
  clang,
  libclang-dev,
  libudev-dev,
@@ -18,14 +18,29 @@ Build-Depends: debhelper-compat (= 13),
  libseat-dev,
  libpipewire-0.3-dev,
  libpango1.0-dev,
- libdisplay-info-dev
+ libdisplay-info-dev,
+ pkg-config
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 
 Package: niri-git
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, seatd
+Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, seatd, dbus
+Recommends: xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, gnome-keyring,
+            mesa-dri-drivers, mesa-libegl, xwayland-satellite
+Suggests: dinit, mako, alacritty, fuzzel
 Conflicts: niri
 Provides: niri
-Description: A scrollable-tiling Wayland compositor.
- Highly optimized bleeding-edge build for Devuan without systemd.
+Description: A scrollable-tiling Wayland compositor (Devuan-optimized build)
+ Niri is a scrollable-tiling Wayland compositor. Windows are arranged in
+ columns on an infinite strip going to the right. Every monitor has its own
+ separate window strip.
+ .
+ This package is compiled from the latest git source with optimizations
+ for x86-64-v3 and built without systemd dependencies. It integrates with
+ elogind/libseat for session management and supports dinit for session
+ startup on Devuan.
+ .
+ For systems using sysvinit, openrc, or runit, the niri-session launcher
+ automatically falls back to dbus-run-session for proper D-Bus session
+ bus creation.
