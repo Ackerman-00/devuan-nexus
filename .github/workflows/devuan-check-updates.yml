@@ -1,4 +1,3 @@
-# YAML 1.2
 name: Devuan Check Updates
 
 on:
@@ -23,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: devuan/devuan:ceres
+    # ↓↓↓ FIX: all run steps inside a container default to sh, not bash
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Install dependencies & GitHub CLI
         run: |
@@ -49,7 +52,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory '*'
-          
+
           CHANGED_PKGS=""
 
           for pkg_dir in */ ; do
@@ -62,7 +65,7 @@ jobs:
             REPO=$(grep '^REPO=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}')
             BRANCH=$(grep '^BRANCH=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}')
             BASE_VERSION=$(grep '^BASE_VERSION=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}' || true)
-            
+
             UPSTREAM_URL="https://github.com/${REPO}.git"
             echo "--- Scanning $pkg_name ($UPSTREAM_URL) ---"
 
@@ -83,17 +86,17 @@ jobs:
               fi
 
               CURR_VERSION=$(dpkg-parsechangelog -l "$pkg_name/debian/changelog" -S Version)
-              
+
               if [[ "$CURR_VERSION" != *"$LATEST_HASH"* ]]; then
                 echo "  [+] New commit detected! Bumping to $LATEST_HASH..."
-                
+
                 DATE_STR=$(date -u +%Y%m%d)
                 NEW_VERSION="${BASE_VERSION}+git${DATE_STR}.${LATEST_HASH}-1"
-                
+
                 cd "$pkg_name"
                 dch -v "$NEW_VERSION" -D ceres --force-distribution "Automated git bump to $LATEST_HASH"
                 cd ..
-                
+
                 CHANGED_PKGS="$CHANGED_PKGS $pkg_name "
               else
                 echo "  [-] Already up to date."
@@ -104,7 +107,7 @@ jobs:
           if [ -n "$CHANGED_PKGS" ]; then
             echo "updates_found=true" >> "$GITHUB_OUTPUT"
             echo "package_list=$CHANGED_PKGS" >> "$GITHUB_OUTPUT"
-            
+
             git add .
             git commit -m "auto-update: changelog bumps $(date -u '+%Y-%m-%d')"
             git push origin HEAD:${{ github.ref_name }}
