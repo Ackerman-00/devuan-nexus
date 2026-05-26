@@ -85,6 +85,10 @@ jobs:
           
           cd build-src
           
+          echo ">>> Cleaning up legacy compat file and fixing permissions..."
+          rm -f debian/compat
+          chmod +x debian/rules
+          
           echo ">>> Installing Build Dependencies (Resolving via apt)..."
           mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control
           
