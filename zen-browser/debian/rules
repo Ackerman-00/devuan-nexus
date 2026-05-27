@@ -23,14 +23,7 @@ override_dh_auto_install:
 
 	# Install application files to /opt
 	mkdir -p debian/zen-browser/opt/zen-browser
-	cp -a * debian/zen-browser/opt/zen-browser/ 2>/dev/null || true
-	# In case the tarball has a top-level directory, move contents up
-	if [ -d debian/zen-browser/opt/zen-browser/zen ]; then \
-		true; \
-	elif [ -d debian/zen-browser/opt/zen-browser/zen-* ]; then \
-		mv debian/zen-browser/opt/zen-browser/zen-*/* debian/zen-browser/opt/zen-browser/ 2>/dev/null || true; \
-		rmdir debian/zen-browser/opt/zen-browser/zen-* 2>/dev/null || true; \
-	fi
+	cp -a zen/* debian/zen-browser/opt/zen-browser/ 2>/dev/null || true
 
 	# Create executable symlink
 	mkdir -p debian/zen-browser/usr/bin
