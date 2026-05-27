@@ -12,5 +12,5 @@ sudo apt-get update
 ## Example (package install)
 
 ```
-sudo apt-get install niri
+sudo apt-get install niri-git
 ```
