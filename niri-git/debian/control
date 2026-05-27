@@ -28,7 +28,7 @@ Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, seatd, dbus
 Recommends: mesa-dri-drivers, mesa-libegl
 Suggests: xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, gnome-keyring,
-          xwayland-satellite, dinit, mako, alacritty, fuzzel
+          xwayland-satellite-git, dinit, mako, alacritty, fuzzel
 Conflicts: niri
 Provides: niri
 Description: A scrollable-tiling Wayland compositor (Devuan-optimized build)
