@@ -1,0 +1,38 @@
+Source: vesktop
+Section: net
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+ curl,
+ ca-certificates
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: vesktop
+Architecture: amd64
+Depends: ${misc:Depends},
+ libgtk-3-0,
+ libnotify4,
+ libnss3,
+ libxss1,
+ libxtst6,
+ libsecret-1-0,
+ libasound2,
+ libglib2.0-0,
+ xdg-utils
+Recommends: libpulse0, pipewire-alsa | pulseaudio
+Suggests: wl-clipboard
+Conflicts: vesktop-git, vencord-desktop
+Provides: vencord-desktop
+Description: Custom Discord client with Vencord preinstalled
+ Vesktop is a custom Discord desktop app that is much more lightweight
+ and faster than the official Discord app. It bundles Vencord for
+ enhanced customization and features.
+ .
+ Main features:
+  * Vencord preinstalled
+  * Linux Screenshare with sound & Wayland support
+  * Better privacy — Discord has limited system access
+  * Uses system Electron for better integration
+ .
+ This package repackages the official upstream .deb for Devuan.

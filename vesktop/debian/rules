@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# Nothing to build — binary repackage only
+	true
+
+override_dh_auto_install:
+	# Download upstream .deb (same URL pattern as Void template)
+	VERSION=$(shell grep '^BASE_VERSION=' ../vesktop/nexus.conf | cut -d'=' -f2)
+	curl -fsSL -o /tmp/vesktop.deb \
+		"https://github.com/Vencord/Vesktop/releases/download/v$${VERSION}/vesktop_$${VERSION}_amd64.deb"
+
+	# Extract data.tar.* from the .deb
+	mkdir -p /tmp/vesktop-extract
+	cd /tmp/vesktop-extract && ar x /tmp/vesktop.deb data.tar.xz
+	cd /tmp/vesktop-extract && tar xf data.tar.xz -C .
+
+	# Install application files
+	mkdir -p debian/vesktop/opt
+	cp -a /tmp/vesktop-extract/opt/Vesktop debian/vesktop/opt/
+
+	# Install desktop entry and icons
+	mkdir -p debian/vesktop/usr/share/applications
+	mkdir -p debian/vesktop/usr/share/icons
+	cp -a /tmp/vesktop-extract/usr/share/applications/* debian/vesktop/usr/share/applications/ || true
+	cp -a /tmp/vesktop-extract/usr/share/icons/* debian/vesktop/usr/share/icons/ || true
+
+	# Create executable symlink
+	mkdir -p debian/vesktop/usr/bin
+	ln -sf /opt/Vesktop/vesktop debian/vesktop/usr/bin/vesktop
+
+	# Set sandbox permissions
+	if [ -f debian/vesktop/opt/Vesktop/chrome-sandbox ]; then \
+		chmod 4755 debian/vesktop/opt/Vesktop/chrome-sandbox; \
+	fi
+
+	# Cleanup
+	rm -rf /tmp/vesktop.deb /tmp/vesktop-extract

@@ -73,29 +73,66 @@ jobs:
       - name: Fetch Latest Source and Build Package
         run: |
           TARGET="${{ env.TARGET_PKG }}"
+          PKG_TYPE=$(grep '^TYPE=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
           REPO=$(grep '^REPO=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
-          BRANCH=$(grep '^BRANCH=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r')
-          UPSTREAM_URL="https://github.com/${REPO}.git"
-          
-          echo ">>> Cloning $TARGET source from branch $BRANCH..."
-          git clone -b "$BRANCH" "$UPSTREAM_URL" build-src
-          
-          echo ">>> Injecting Debian configuration..."
-          cp -a "$TARGET/debian" build-src/
-          
-          cd build-src
-          
-          echo ">>> Cleaning up legacy compat file and fixing permissions..."
-          rm -f debian/compat
-          chmod +x debian/rules
-          
-          echo ">>> Installing Build Dependencies (Resolving via apt)..."
-          mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control
-          
-          echo ">>> Compiling Debian Package (.deb)..."
-          dpkg-buildpackage -b -uc -us
-          
-          cd ..
+          BRANCH=$(grep '^BRANCH=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r' || true)
+          BASE_VERSION=$(grep '^BASE_VERSION=' "$TARGET/nexus.conf" | cut -d'=' -f2 | tr -d '\r' || true)
+
+          if [ "$PKG_TYPE" = "git" ]; then
+            UPSTREAM_URL="https://github.com/${REPO}.git"
+            echo ">>> Cloning $TARGET source from branch $BRANCH..."
+            git clone -b "$BRANCH" "$UPSTREAM_URL" build-src
+
+            echo ">>> Injecting Debian configuration..."
+            cp -a "$TARGET/debian" build-src/
+
+            cd build-src
+
+            echo ">>> Cleaning up legacy compat file and fixing permissions..."
+            rm -f debian/compat
+            chmod +x debian/rules
+
+            echo ">>> Installing Build Dependencies (Resolving via apt)..."
+            mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control
+
+            echo ">>> Compiling Debian Package (.deb)..."
+            dpkg-buildpackage -b -uc -us
+
+            cd ..
+
+          elif [ "$PKG_TYPE" = "deb-repackage" ]; then
+            echo ">>> Downloading upstream .deb for $TARGET v$BASE_VERSION..."
+            # The upstream .deb URL matches the pattern from the Void template
+            UPSTREAM_DEB="https://github.com/${REPO}/releases/download/v${BASE_VERSION}/vesktop_${BASE_VERSION}_amd64.deb"
+            curl -fsSL -o /tmp/upstream.deb "$UPSTREAM_DEB"
+
+            echo ">>> Extracting upstream .deb..."
+            mkdir -p build-src
+            cd /tmp && ar x upstream.deb data.tar.xz
+            tar xf data.tar.xz -C /__w/devuan-nexus/devuan-nexus/build-src/
+            rm -f /tmp/upstream.deb /tmp/data.tar.xz
+            cd /__w/devuan-nexus/devuan-nexus
+
+            echo ">>> Injecting Debian metadata..."
+            cp -a "$TARGET/debian" build-src/
+
+            cd build-src
+            rm -f debian/compat
+            chmod +x debian/rules
+
+            echo ">>> Installing Build Dependencies (none needed for repackage)..."
+            mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control || true
+
+            echo ">>> Repackaging Debian Package (.deb)..."
+            dpkg-buildpackage -b -uc -us
+
+            cd ..
+
+          else
+            echo "::error::Unknown PKG_TYPE '$PKG_TYPE' for $TARGET"
+            exit 1
+          fi
+
           echo ">>> Moving compiled artifacts to public pool..."
           mv *.deb public/devuan/
 

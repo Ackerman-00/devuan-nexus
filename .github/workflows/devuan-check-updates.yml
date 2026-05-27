@@ -63,7 +63,7 @@ jobs:
 
             PKG_TYPE=$(grep '^TYPE=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}')
             REPO=$(grep '^REPO=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}')
-            BRANCH=$(grep '^BRANCH=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}')
+            BRANCH=$(grep '^BRANCH=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}' || true)
             BASE_VERSION=$(grep '^BASE_VERSION=' "$pkg_name/nexus.conf" | cut -d'=' -f2 | awk '{$1=$1;print}' || true)
 
             UPSTREAM_URL="https://github.com/${REPO}.git"
@@ -94,14 +94,35 @@ jobs:
                 NEW_VERSION="${BASE_VERSION}+git${DATE_STR}.${LATEST_HASH}-1"
 
                 cd "$pkg_name"
-                # -b forces the version bump even if dpkg thinks the new version is lower
-                # (needed because placeholder hashes like 0000000 sort before real hashes)
                 dch -b -v "$NEW_VERSION" -D ceres --force-distribution "Automated git bump to $LATEST_HASH"
                 cd ..
 
                 CHANGED_PKGS="$CHANGED_PKGS $pkg_name "
               else
                 echo "  [-] Already up to date."
+              fi
+
+            elif [ "$PKG_TYPE" = "deb-repackage" ]; then
+              LATEST_TAG=$(curl -sSL -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name | sed 's/^v//')
+              if [ "$LATEST_TAG" = "null" ] || [ -z "$LATEST_TAG" ]; then
+                echo "  [!] Failed to fetch latest release for $pkg_name."
+                continue
+              fi
+
+              CURR_VERSION=$(dpkg-parsechangelog -l "$pkg_name/debian/changelog" -S Version)
+              # Extract upstream version: "1.6.5+devuan1" → "1.6.5"
+              CURR_UPSTREAM=$(echo "$CURR_VERSION" | sed 's/+devuan.*//')
+
+              if [ "$CURR_UPSTREAM" != "$LATEST_TAG" ]; then
+                echo "  [+] New upstream release detected! Bumping $CURR_UPSTREAM → $LATEST_TAG..."
+                NEW_VERSION="${LATEST_TAG}+devuan1"
+                cd "$pkg_name"
+                dch -b -v "$NEW_VERSION" -D ceres --force-distribution "New upstream release $LATEST_TAG"
+                cd ..
+                CHANGED_PKGS="$CHANGED_PKGS $pkg_name "
+              else
+                echo "  [-] Already up to date (upstream $LATEST_TAG)."
               fi
             fi
           done
