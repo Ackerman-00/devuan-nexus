@@ -145,6 +145,33 @@ jobs:
 
             cd ..
 
+          elif [ "$PKG_TYPE" = "tarball-repackage" ]; then
+            TARBALL_URL=$(grep '^TARBALL_URL=' "$TARGET/nexus.conf" | cut -d'=' -f2- | tr -d '\r' | xargs)
+            TARBALL_URL=$(echo "$TARBALL_URL" | sed "s/\${VERSION}/${BASE_VERSION}/g")
+
+            echo ">>> Downloading upstream tarball: $TARBALL_URL"
+            curl -fsSL -o /tmp/upstream.tar.xz "$TARBALL_URL"
+
+            echo ">>> Extracting upstream tarball..."
+            mkdir -p build-src
+            tar -xf /tmp/upstream.tar.xz -C build-src/ --strip-components=1
+            rm -f /tmp/upstream.tar.xz
+
+            echo ">>> Injecting Debian metadata..."
+            cp -a "$TARGET/debian" build-src/
+
+            cd build-src
+            rm -f debian/compat
+            chmod +x debian/rules
+
+            echo ">>> Installing Build Dependencies..."
+            mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control || true
+
+            echo ">>> Repackaging Debian Package (.deb)..."
+            dpkg-buildpackage -b -uc -us
+
+            cd ..
+
           else
             echo "::error::Unknown PKG_TYPE '$PKG_TYPE' for $TARGET"
             exit 1
