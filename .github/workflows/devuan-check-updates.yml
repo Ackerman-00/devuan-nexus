@@ -111,7 +111,6 @@ jobs:
               fi
 
               CURR_VERSION=$(dpkg-parsechangelog -l "$pkg_name/debian/changelog" -S Version)
-              # Extract upstream version: "1.6.5+devuan1" → "1.6.5"
               CURR_UPSTREAM=$(echo "$CURR_VERSION" | sed 's/+devuan.*//')
 
               if [ "$CURR_UPSTREAM" != "$LATEST_TAG" ]; then
@@ -119,6 +118,8 @@ jobs:
                 NEW_VERSION="${LATEST_TAG}+devuan1"
                 cd "$pkg_name"
                 dch -b -v "$NEW_VERSION" -D ceres --force-distribution "New upstream release $LATEST_TAG"
+                # Update BASE_VERSION in nexus.conf so build.yml downloads the correct release
+                sed -i "s/^BASE_VERSION=.*/BASE_VERSION=${LATEST_TAG}/" nexus.conf
                 cd ..
                 CHANGED_PKGS="$CHANGED_PKGS $pkg_name "
               else
