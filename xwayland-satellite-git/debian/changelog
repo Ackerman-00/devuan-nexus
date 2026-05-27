@@ -1,0 +1,8 @@
+xwayland-satellite-git (0.8.1+git20260527.0000000-1) ceres; urgency=medium
+
+  * Initial Devuan-Nexus build.
+  * Built without systemd feature; no systemd service files installed.
+  * Optimized for x86-64-v3 with -O3.
+  * Grants rootless Xwayland integration to any wlroots-based compositor.
+
+ -- Ackerman <ackerman@nexus.local>  Tue, 27 May 2026 00:00:00 +0600

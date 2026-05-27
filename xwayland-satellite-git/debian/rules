@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo fetch
+	cargo build --release
+
+override_dh_auto_install:
+	mkdir -p debian/xwayland-satellite-git/usr/bin/
+	cp -vf target/release/xwayland-satellite debian/xwayland-satellite-git/usr/bin/xwayland-satellite
+	chmod 755 debian/xwayland-satellite-git/usr/bin/xwayland-satellite
