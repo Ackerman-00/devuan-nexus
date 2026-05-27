@@ -1,3 +1,9 @@
+xwayland-satellite-git (0.8.1+git20260527.5d1efbc-1) ceres; urgency=medium
+
+  * Automated git bump to 5d1efbc
+
+ -- Nexus Build Bot <actions@github.com>  Wed, 27 May 2026 07:19:20 +0000
+
 xwayland-satellite-git (0.8.1+git20260527.0000000-1) ceres; urgency=medium
 
   * Initial Devuan-Nexus build.
