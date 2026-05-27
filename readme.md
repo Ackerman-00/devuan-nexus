@@ -7,5 +7,10 @@ echo 'deb [trusted=yes] https://github.com/Ackerman-00/devuan-nexus/releases/dow
 # Update and verify
 ```
 sudo apt-get update
-apt-cache policy niri-git
+```
+
+# Example (package install)
+
+```
+sudo apt-get install niri
 ```
