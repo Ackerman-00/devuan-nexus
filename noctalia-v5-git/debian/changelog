@@ -1,0 +1,8 @@
+noctalia-v5-git (5.0.0+git20260527.0000000-1) ceres; urgency=medium
+
+  * Initial Devuan-Nexus build of Noctalia v5 alpha.
+  * Full C++ rewrite using cairo/pango rendering — no Qt6 dependency.
+  * Built without systemd; uses elogind's sd-bus via sdbus-c++.
+  * Optimized for x86-64-v3 with -O3.
+
+ -- Ackerman <ackerman@nexus.local>  Tue, 27 May 2026 00:00:00 +0600

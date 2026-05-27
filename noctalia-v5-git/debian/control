@@ -1,0 +1,50 @@
+Source: noctalia-v5-git
+Section: x11
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+ meson,
+ ninja-build,
+ pkg-config,
+ g++,
+ libsdbus-c++-dev,
+ libwayland-dev,
+ wayland-protocols,
+ libfreetype-dev,
+ libfontconfig-dev,
+ libcairo2-dev,
+ libpango1.0-dev,
+ libharfbuzz-dev,
+ librsvg2-dev,
+ libxkbcommon-dev,
+ libglib2.0-dev,
+ libpolkit-agent-1-dev,
+ libpolkit-gobject-1-dev,
+ libpipewire-0.3-dev,
+ libcurl4-openssl-dev,
+ libpam0g-dev,
+ libjemalloc-dev,
+ libglvnd-dev,
+ libwebp-dev
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: noctalia-v5-git
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: brightnessctl, upower, fonts-roboto
+Suggests: wlsunset, wl-clipboard, mako-notification-daemon,
+          libpam-elogind
+Conflicts: noctalia, noctalia-shell, noctalia-bin
+Provides: noctalia-shell
+Description: Sleek Wayland desktop shell (v5 alpha, Devuan-optimized)
+ Noctalia v5 is a complete C++ rewrite of the popular desktop shell,
+ built directly on Wayland and OpenGL ES with cairo/pango rendering.
+ It provides bars, panels, notifications, a dock, lock screen,
+ wallpapers, OSD, and nearly 100 plugins — without pulling in Qt6.
+ .
+ Native support for Niri, Hyprland, Sway, Scroll, Labwc, and MangoWC.
+ This package is compiled from the latest v5 branch source with
+ optimizations for x86-64-v3 and built without systemd dependencies.
+ .
+ Note: This is alpha software. Expect rough edges.
