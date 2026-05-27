@@ -2,7 +2,6 @@
 
 export DH_VERBOSE = 1
 export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3
-export NIRI_BUILD_COMMIT = $(shell git -C build-src rev-parse --short=7 HEAD 2>/dev/null || echo "unknown")
 
 %:
 	dh $@
@@ -31,8 +30,7 @@ override_dh_auto_install:
 	cp -vf resources/dinit/niri.target debian/niri-git/usr/lib/dinit.d/user/niri.target
 
 	# PATCH: Replace the useless else clause in niri-session with a working
-	# fallback for sysvinit/openrc/runit (non-systemd, non-dinit systems).
-	# niri --session imports environment into D-Bus but does NOT create a
-	# D-Bus session bus, so it MUST be wrapped with dbus-run-session.
-	sed -i 's/^else echo "No systemd or dinit detected, please use niri --session instead."$$/else\n    exec dbus-run-session niri --session/' \
-		debian/niri-git/usr/bin/niri-session
+
+	sed -i '/^else/,/^fi$$/{
+	  /echo.*No systemd or dinit detected/c\    exec dbus-run-session niri --session
+	}' debian/niri-git/usr/bin/niri-session
