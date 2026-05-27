@@ -6,8 +6,10 @@ export DH_VERBOSE = 1
 	dh $@
 
 override_dh_auto_build:
-	# Nothing to build — binary repackage only
 	true
+
+# Skip dwz: upstream Electron binaries have no/partial debug info
+override_dh_dwz:
 
 override_dh_auto_install:
 	# Files were already extracted by the workflow into the current directory.
