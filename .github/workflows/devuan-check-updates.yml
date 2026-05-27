@@ -102,7 +102,7 @@ jobs:
                 echo "  [-] Already up to date."
               fi
 
-            elif [ "$PKG_TYPE" = "deb-repackage" ]; then
+            elif [ "$PKG_TYPE" = "deb-repackage" ] || [ "$PKG_TYPE" = "tarball-repackage" ]; then
               LATEST_TAG=$(curl -sSL -H "Authorization: token $GITHUB_TOKEN" \
                 "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name | sed 's/^v//')
               if [ "$LATEST_TAG" = "null" ] || [ -z "$LATEST_TAG" ]; then
