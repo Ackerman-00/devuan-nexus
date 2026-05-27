@@ -101,10 +101,12 @@ jobs:
             cd ..
 
           elif [ "$PKG_TYPE" = "deb-repackage" ]; then
-            echo ">>> Downloading upstream .deb for $TARGET v$BASE_VERSION..."
-            # The upstream .deb URL matches the pattern from the Void template
-            UPSTREAM_DEB="https://github.com/${REPO}/releases/download/v${BASE_VERSION}/vesktop_${BASE_VERSION}_amd64.deb"
-            curl -fsSL -o /tmp/upstream.deb "$UPSTREAM_DEB"
+            # Read DEB_URL from nexus.conf, substitute ${VERSION} with BASE_VERSION
+            DEB_URL=$(grep '^DEB_URL=' "$TARGET/nexus.conf" | cut -d'=' -f2- | tr -d '\r' | xargs)
+            DEB_URL=$(echo "$DEB_URL" | sed "s/\${VERSION}/${BASE_VERSION}/g")
+
+            echo ">>> Downloading upstream .deb: $DEB_URL"
+            curl -fsSL -o /tmp/upstream.deb "$DEB_URL"
 
             echo ">>> Extracting upstream .deb..."
             mkdir -p build-src
@@ -120,7 +122,7 @@ jobs:
             rm -f debian/compat
             chmod +x debian/rules
 
-            echo ">>> Installing Build Dependencies (none needed for repackage)..."
+            echo ">>> Installing Build Dependencies..."
             mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control || true
 
             echo ">>> Repackaging Debian Package (.deb)..."
