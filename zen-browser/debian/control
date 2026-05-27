@@ -1,0 +1,60 @@
+Source: zen-browser
+Section: web
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+ curl,
+ ca-certificates,
+ xz-utils
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: zen-browser
+Architecture: amd64
+Depends: ${misc:Depends},
+ libnss3,
+ libnspr4,
+ libnotify4,
+ libx11-6,
+ libxcomposite1,
+ libxdamage1,
+ libxfixes3,
+ libxrandr2,
+ libxext6,
+ libxrender1,
+ libxtst6,
+ libxss1,
+ libgtk-3-0,
+ libglib2.0-0,
+ libcairo2,
+ libpango-1.0-0,
+ libasound2,
+ libdbus-1-3,
+ libatk1.0-0t64,
+ libatk-bridge2.0-0t64,
+ libcups2t64,
+ libdrm2,
+ libgbm1,
+ libxkbcommon0,
+ xdg-utils,
+ desktop-file-utils,
+ hicolor-icon-theme
+Recommends: libavcodec62, hunspell, hyphen-en-us
+Suggests: zen-browser-wayland, libpulse0
+Conflicts: zen-browser-bin, zen-browser-git
+Provides: zen-browser-bin
+Description: A calmer internet — privacy-focused Firefox-based browser
+ Zen Browser is a Firefox-based browser redesigned from the ground up
+ to bring calm and organization to your browsing. It blocks trackers,
+ ads, and unwanted content by default.
+ .
+ Key features:
+  * Split Views — browse two pages side-by-side within a single window
+  * Workspaces — organize tabs into separate contexts
+  * Sidebar-based tab management with compact mode
+  * Boosts — customize any website's look and feel
+  * Built-in ad blocker and tracking protection (ETP)
+  * Compact mode, Glance, and Zen Mods for a clean experience
+ .
+ This package repackages the official upstream tarball for Devuan,
+ with system NSS/NSPR libraries and dictionary integration.
