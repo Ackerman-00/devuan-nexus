@@ -25,12 +25,9 @@ override_dh_auto_install:
 	cp -vf resources/niri.desktop debian/niri-git/usr/share/wayland-sessions/niri.desktop
 	cp -vf resources/niri-portals.conf debian/niri-git/usr/share/xdg-desktop-portal/niri-portals.conf
 
-	# dinit user services (systemd-free session integration)
+	# dinit user services
 	cp -vf resources/dinit/niri debian/niri-git/usr/lib/dinit.d/user/niri
 	cp -vf resources/dinit/niri.target debian/niri-git/usr/lib/dinit.d/user/niri.target
 
-	# PATCH: Replace the useless else clause in niri-session with a working
-
-	sed -i '/^else/,/^fi$$/{
-	  /echo.*No systemd or dinit detected/c\    exec dbus-run-session niri --session
-	}' debian/niri-git/usr/bin/niri-session
+	# PATCH: replace the broken else clause with a working fallback for sysvinit/openrc/runit
+	sed -i '/^else/,/^fi$$/{/echo.*No systemd or dinit detected/c\    exec dbus-run-session niri --session}' debian/niri-git/usr/bin/niri-session
