@@ -24,29 +24,31 @@ jobs:
       - name: Install System Utilities
         run: |
           # Retry loop for mirror inconsistencies (max 3 attempts)
+          # Exits with error if all attempts fail
+          set -o pipefail
           for i in 1 2 3; do
             apt-get update
             if apt-get install -y curl git wget build-essential devscripts equivs \
                                apt-utils gnupg ca-certificates rustc cargo; then
-              break
+              echo "System utilities installed successfully on attempt $i."
+              exit 0
             fi
             echo "Attempt $i failed, retrying in 10s..."
             sleep 10
           done
+          echo "::error::Failed to install system utilities after 3 attempts."
+          exit 1
 
       - name: Install GitHub CLI
         run: |
-          for i in 1 2 3; do
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-            chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-            apt-get update
-            if apt-get install -y gh; then
-              break
-            fi
-            echo "GitHub CLI install attempt $i failed, retrying in 5s..."
-            sleep 5
-          done
+          # Ensure curl is available (install if missing)
+          if ! command -v curl &>/dev/null; then
+            apt-get update && apt-get install -y curl
+          fi
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update && apt-get install -y gh
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -115,7 +117,6 @@ jobs:
             cd ..
 
           elif [ "$PKG_TYPE" = "deb-repackage" ]; then
-            # Read DEB_URL from nexus.conf, substitute ${VERSION} with BASE_VERSION
             DEB_URL=$(grep '^DEB_URL=' "$TARGET/nexus.conf" | cut -d'=' -f2- | tr -d '\r' | xargs)
             DEB_URL=$(echo "$DEB_URL" | sed "s/\${VERSION}/${BASE_VERSION}/g")
 
