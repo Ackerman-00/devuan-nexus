@@ -247,6 +247,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config --global --add safe.directory /__w/devuan-nexus/devuan-nexus
           gh workflow run "Devuan Build Relay" \
             --ref "${GITHUB_REF_NAME}" \
             -f package_list="${{ env.REMAINING_PKGS }}"
