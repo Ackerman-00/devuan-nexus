@@ -1,3 +1,9 @@
+niri-git (26.04+git20260528.9bd6c2c-1) ceres; urgency=medium
+
+  * Automated git bump to 9bd6c2c
+
+ -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 20:11:59 +0000
+
 niri-git (26.04+git20260528.9a6f310-1) ceres; urgency=medium
 
   * Automated git bump to 9a6f310
