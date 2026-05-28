@@ -5,7 +5,8 @@ Maintainer: Ackerman <ackerman@nexus.local>
 Build-Depends: debhelper-compat (= 13),
  curl,
  ca-certificates,
- xz-utils
+ xz-utils,
+ rsync
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 
