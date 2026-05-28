@@ -19,11 +19,11 @@ override_dh_shlibdeps:
 
 override_dh_auto_install:
 	# Files were already extracted by the workflow into the current directory.
-	# We just need to place them into the Debian packaging tree.
+	# We use rsync to copy everything except the injected debian folder.
 
 	# Install application files to /opt
 	mkdir -p debian/zen-browser/opt/zen-browser
-	cp -a zen/* debian/zen-browser/opt/zen-browser/ 2>/dev/null || true
+	rsync -a --exclude='debian' ./ debian/zen-browser/opt/zen-browser/
 
 	# Create executable symlink
 	mkdir -p debian/zen-browser/usr/bin
