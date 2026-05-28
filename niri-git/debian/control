@@ -25,7 +25,7 @@ Rules-Requires-Root: no
 
 Package: niri-git
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, seatd, dbus
+Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, libpam-elogind, libwayland-server0, libwayland-client0, seatd, dbus
 Recommends: mesa-dri-drivers, mesa-libegl
 Suggests: xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, gnome-keyring,
           xwayland-satellite-git, dinit, mako, alacritty, fuzzel
