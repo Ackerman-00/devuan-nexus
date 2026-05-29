@@ -1,0 +1,75 @@
+#!/usr/bin/make -f
+
+# Force x86-64-v3 + O3 for performance
+export DEB_CFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3 -pipe
+export DEB_CXXFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3 -pipe
+
+# Rust flags for target CPU + linker
+export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3 -C link-arg=-fuse-ld=mold
+export CARGO_PROFILE_RELEASE_DEBUG = 0
+export CARGO_PROFILE_RELEASE_STRIP = symbols
+
+# Disable Zed auto-updates; use APT instead
+export ZED_UPDATE_EXPLANATION = Updates handled by Devuan-Nexus APT repository
+export RELEASE_CHANNEL = stable
+
+# Force elogind/seatd path; disable systemd detection
+export ZED_USE_ELOGIND = 1
+export LIBSEAT_BACKEND = elogind
+
+# Disable vendoring that pulls in systemd
+export LIBGIT2_NO_VENDOR = 1
+
+%:
+	dh $@ --buildsystem=cargo
+
+override_dh_auto_configure:
+	# Ensure systemd feature is disabled in Cargo config
+	mkdir -p .cargo
+	cat > .cargo/config.toml << 'EOF'
+[build]
+rustflags = ["-C", "target-cpu=x86-64-v3", "-C", "opt-level=3"]
+
+[env]
+ZED_UPDATE_EXPLANATION = "Updates handled by Devuan-Nexus APT repository"
+RELEASE_CHANNEL = "stable"
+EOF
+
+override_dh_auto_build:
+	# Set stable channel file
+	printf "stable" > crates/zed/RELEASE_CHANNEL
+	# Build CLI and editor separately
+	cargo build --release -p cli --no-default-features --features "wayland,x11"
+	cargo build --release -p zed --no-default-features --features "wayland,x11"
+
+override_dh_auto_install:
+	# Install CLI to /usr/bin
+	install -Dm755 target/release/zed $(DESTDIR)/usr/bin/zed-editor
+	# Install main binary to libexec (per upstream docs [[90]])
+	install -Dm755 target/release/zed-editor $(DESTDIR)/usr/libexec/zed-editor
+	# Desktop file with corrected paths
+	install -Dm644 crates/zed/resources/zed.desktop.in \
+		$(DESTDIR)/usr/share/applications/zed-editor.desktop
+	sed -i 's|^Exec=zed|Exec=zed-editor|' \
+		$(DESTDIR)/usr/share/applications/zed-editor.desktop
+	sed -i 's|^Icon=zed|Icon=zed-editor|' \
+		$(DESTDIR)/usr/share/applications/zed-editor.desktop
+	# Icon
+	install -Dm644 crates/zed/resources/app-icon.png \
+		$(DESTDIR)/usr/share/pixmaps/zed-editor.png
+	# License
+	install -Dm644 LICENSE-AGPL $(DESTDIR)/usr/share/doc/zed-editor/copyright
+
+override_dh_dwz:
+	# Skip dwz for Rust binaries (debug info complex)
+	true
+
+override_dh_shlibdeps:
+	# Manual dependency handling for Rust
+	dh_shlibdeps -- --ignore-missing-info
+
+execute_after_dh_auto_build:
+	# Apply elogind compatibility patch if needed
+	if [ -f debian/patches/01-disable-systemd-features.patch ]; then \
+		patch -p1 -d . < debian/patches/01-disable-systemd-features.patch || true; \
+	fi
