@@ -79,7 +79,7 @@ jobs:
                 fi
               fi
 
-              LATEST_HASH=$(git ls-remote "$UPSTREAM_URL" "$BRANCH" | awk '{print substr($1,1,7)}')
+              LATEST_HASH=$(git ls-remote "$UPSTREAM_URL" "refs/heads/$BRANCH" | awk '{print substr($1,1,7)}')
               if [ -z "$LATEST_HASH" ]; then
                 echo "  [!] Failed to fetch remote hash."
                 continue
