@@ -1,3 +1,9 @@
+noctalia-v5-git (5.0.0+git20260529.bbfc136-1) ceres; urgency=medium
+
+  * Automated git bump to bbfc136
+
+ -- Nexus Build Bot <actions@github.com>  Fri, 29 May 2026 20:12:45 +0000
+
 noctalia-v5-git (5.0.0+git20260529.9c89685-1) ceres; urgency=medium
 
   * Automated git bump to 9c89685
