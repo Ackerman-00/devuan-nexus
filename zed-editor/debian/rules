@@ -10,18 +10,14 @@ override_dh_auto_build:
 	true
 
 override_dh_auto_install:
-	# The workflow extracts the tarball with --strip-components=1 into the build root.
-	# Upstream's `script/bundle-linux` already perfectly structures the tarball.
-	
 	mkdir -p debian/zed-editor/usr/bin
 	mkdir -p debian/zed-editor/usr/lib/zed
 	mkdir -p debian/zed-editor/usr/share
 
-	# 1. Install the CLI as 'zeditor' to avoid Debian 'zed' package conflicts
-	install -m0755 bin/zed debian/zed-editor/usr/bin/zeditor
+	# 1. Install the CLI exactly as 'zed' (what upstream expects)
+	install -m0755 bin/zed debian/zed-editor/usr/bin/zed
 
 	# 2. Install the main editor binary to /usr/lib/zed/zed-editor
-	# (The CLI at /usr/bin/zeditor will correctly resolve ../../lib/zed/zed-editor)
 	install -m0755 libexec/zed-editor debian/zed-editor/usr/lib/zed/zed-editor
 
 	# 3. Install upstream's bundled libraries next to the main binary
@@ -36,15 +32,13 @@ override_dh_auto_install:
 	install -m0644 licenses.md debian/zed-editor/usr/share/doc/zed-editor/copyright || true
 
 override_dh_shlibdeps:
-	# Skip shlibdeps: upstream ships prebuilt binaries with bundled private libraries 
-	# (like libffi.so.7 and libpcre.so.3) that do not exist in Debian Sid.
-	# All necessary runtime dependencies are declared manually in debian/control.
+	# Skip shlibdeps: handled manually in control
 	true
 
 override_dh_dwz:
-	# Skip dwz for pre-compiled Rust binaries
+	# Skip dwz for pre-compiled binaries
 	true
 
 override_dh_strip:
-	# Do not strip the upstream binaries or bundled .so files
+	# Do not strip upstream binaries
 	true
