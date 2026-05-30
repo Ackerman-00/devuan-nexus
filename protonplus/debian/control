@@ -12,7 +12,9 @@ Build-Depends: debhelper-compat (= 13),
  libarchive-dev,
  libgee-0.8-dev,
  libsoup-3.0-dev,
- appstream
+ appstream,
+ desktop-file-utils,
+ appstream-util
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://github.com/Vysp3r/ProtonPlus
