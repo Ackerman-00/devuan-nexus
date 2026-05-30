@@ -1,14 +1,8 @@
-zed-editor (1.4.4+git20260530.e2e7a67-1) unstable; urgency=medium
+zed-editor (0.160.0+debian1) unstable; urgency=medium
 
-  * Automated git bump to e2e7a67
+  * Switch to tarball-repackage to bypass GCC 14 aws-lc-rs linker bugs.
+  * Repackages official upstream Linux tarball.
+  * CLI installed as 'zeditor' to avoid Debian 'zed' package conflicts.
+  * Follows official Zed packager guidelines for pathing and envsubst.
 
- -- Nexus Build Bot <actions@github.com>  Sat, 30 May 2026 14:49:24 +0000
-
-zed-editor (1.4.4+git20260530.0000000-1) unstable; urgency=medium
-
-  * Initial Debian Unstable packaging.
-  * Base version updated to stable 1.4.4.
-  * Optimized for x86-64-v3 with -O3.
-  * CLI renamed to 'zeditor' to avoid conflict with Debian's 'zed' package.
-
- -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 00:00:00 +0000
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 19:00:00 +0000
