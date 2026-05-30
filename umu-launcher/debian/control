@@ -1,0 +1,32 @@
+Source: umu-launcher
+Section: games
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+ dh-python,
+ python3-all,
+ python3-setuptools,
+ python3-cbor2,
+ python3-xdg,
+ python3-xxhash,
+ python3-hatchling
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/Open-Wine-Components/umu-launcher
+
+Package: umu-launcher
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends},
+ python3-cbor2,
+ python3-xdg,
+ python3-xxhash,
+ bubblewrap,
+ curl,
+ tar,
+ zstd,
+ zenity | yad
+Description: Unified Linux Wine Game Launcher
+ UMU Launcher is a universal gaming launcher for Linux that allows you to
+ run Windows games using Proton, Wine, and other compatibility tools.
+ It handles the creation of prefixes, environment variables, and Pressure
+ Vessel containerization seamlessly.

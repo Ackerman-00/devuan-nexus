@@ -1,0 +1,6 @@
+umu-launcher (1.2.4+git20260530.0000000-1) unstable; urgency=medium
+
+  * Initial Debian Unstable packaging.
+  * Packaged natively to satisfy faugus-launcher dependencies.
+
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 16:00:00 +0000

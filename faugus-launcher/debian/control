@@ -26,18 +26,12 @@ Depends: ${python3:Depends}, ${misc:Depends},
  imagemagick,
  gir1.2-ayatanaappindicator3-0.1,
  libcanberra-gtk3-module,
- umu-launcher,
- vulkan-tools
-Recommends: winetricks, mangohud, gamemode
+ vulkan-tools,
+ umu-launcher
+Recommends: mangohud, gamemode, winetricks
 Suggests: protonplus
 Description: Simple and lightweight app for running Windows games using UMU-Launcher
  Faugus Launcher is a lightweight, user-friendly frontend for UMU-Launcher
  that allows you to easily run Windows games on Linux.
  .
- Features include:
-  * Native game installation and management
-  * Integrated GE-Proton manager
-  * Gamepad support (requires python3-pygame)
-  * Winetricks and Winecfg integration
- .
- This package is compiled from the latest upstream source for Debian Unstable.
+ This package is compiled from the latest upstream source for Debian.
