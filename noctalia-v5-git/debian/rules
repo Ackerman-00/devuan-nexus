@@ -1,23 +1,28 @@
 #!/usr/bin/make -f
 
 export DH_VERBOSE = 1
-export CXXFLAGS = -O3 -march=x86-64-v3 -mtune=generic
-export CFLAGS = -O3 -march=x86-64-v3 -mtune=generic
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# Apply x86-64-v3 optimizations and suppress unused-result warnings (from Arch PKGBUILD)
+export CXXFLAGS += -O3 -march=x86-64-v3 -mtune=generic -Wno-unused-result
+export CFLAGS += -O3 -march=x86-64-v3 -mtune=generic
 
 %:
-	dh $@
+	dh $@ --buildsystem=meson
 
 override_dh_auto_configure:
 	# Patch: upstream uses -march=native which breaks reproducible builds
-	sed -i "s/-march=native/-march=x86-64-v3/g" meson.build
-	sed -i "s/-mtune=native/-mtune=generic/g" meson.build
-	meson setup build --buildtype=release --prefix=/usr -Db_ndebug=true
-	dh_auto_configure --buildsystem=meson --builddirectory=build
-
-override_dh_auto_build:
-	dh_auto_build --buildsystem=meson --builddirectory=build
+	sed -i "s/-march=native/-march=x86-64-v3/g" meson.build || true
+	sed -i "s/-mtune=native/-mtune=generic/g" meson.build || true
+	# Let debhelper handle the meson setup natively
+	dh_auto_configure -- --buildtype=release -Db_ndebug=true
 
 override_dh_auto_install:
-	dh_auto_install --buildsystem=meson --builddirectory=build
-	# Remove any systemd user service files (none in v5 currently)
+	dh_auto_install
+	# Remove any systemd user service files if upstream adds them in the future
 	rm -rf debian/noctalia-v5-git/usr/lib/systemd || true
+	
+	# Install docs manually since meson might not map them to Debian paths perfectly
+	install -d debian/noctalia-v5-git/usr/share/doc/noctalia-v5-git
+	install -m644 LICENSE debian/noctalia-v5-git/usr/share/doc/noctalia-v5-git/copyright || true
+	install -m644 README.md debian/noctalia-v5-git/usr/share/doc/noctalia-v5-git/README.md || true

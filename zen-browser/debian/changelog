@@ -1,15 +1,8 @@
-zen-browser (1.20.1b+devuan1) ceres; urgency=medium
+zen-browser (1.20.1b+debian1) unstable; urgency=medium
 
-  * New upstream release 1.20.1b
+  * Converted to pure Debian Unstable (Sid).
+  * Repackaged from official upstream tarball.
+  * Updated dependencies for Debian 64-bit time_t transition (t64).
+  * Added missing libdbus-glib-1-2 and libxt6 required by Firefox forks.
 
- -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 02:35:36 +0000
-
-zen-browser (1.20b+devuan1) ceres; urgency=medium
-
-  * Initial Devuan-Nexus repackage of upstream Zen Browser tarball.
-  * Firefox 151.0-based privacy browser with Boosts, split views, and workspaces.
-  * Installed to /opt/zen-browser with system desktop integration.
-  * System NSS/NSPR libraries used instead of bundled copies.
-  * System dictionaries linked for spellcheck support.
-
- -- Ackerman <ackerman@nexus.local>  Tue, 27 May 2026 00:00:00 +0600
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 00:00:00 +0000

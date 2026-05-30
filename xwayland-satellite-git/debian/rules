@@ -8,9 +8,20 @@ export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3
 
 override_dh_auto_build:
 	cargo fetch
-	cargo build --release
+	# Compile with the native systemd feature flag for sd-notify support
+	cargo build --release --features systemd
 
 override_dh_auto_install:
 	mkdir -p debian/xwayland-satellite-git/usr/bin/
+	mkdir -p debian/xwayland-satellite-git/usr/lib/systemd/user/
+
+	# Install the primary binary
 	cp -vf target/release/xwayland-satellite debian/xwayland-satellite-git/usr/bin/xwayland-satellite
 	chmod 755 debian/xwayland-satellite-git/usr/bin/xwayland-satellite
+
+	# Copy the upstream systemd service
+	cp -vf resources/xwayland-satellite.service debian/xwayland-satellite-git/usr/lib/systemd/user/xwayland-satellite.service
+	chmod 644 debian/xwayland-satellite-git/usr/lib/systemd/user/xwayland-satellite.service
+
+	# PikaOS path fix: Upstream defaults ExecStart to /usr/local/bin, we need /usr/bin
+	sed -i 's|ExecStart=.*|ExecStart=/usr/bin/xwayland-satellite|' debian/xwayland-satellite-git/usr/lib/systemd/user/xwayland-satellite.service

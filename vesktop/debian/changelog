@@ -1,7 +1,7 @@
-vesktop (1.6.5+devuan1) ceres; urgency=medium
+vesktop (1.6.5+debian1) unstable; urgency=medium
 
-  * Initial Devuan-Nexus repackage of upstream Vesktop .deb.
-  * Bundled Electron runtime with system-wide integration.
-  * Vencord preinstalled for enhanced Discord experience.
+  * Converted to pure Debian Unstable (Sid).
+  * Repackaged from official upstream .deb.
+  * Updated dependencies for Debian 64-bit time_t transition (t64).
 
- -- Ackerman <ackerman@nexus.local>  Tue, 27 May 2026 00:00:00 +0600
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 00:00:00 +0000

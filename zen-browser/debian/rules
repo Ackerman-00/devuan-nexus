@@ -29,13 +29,13 @@ override_dh_auto_install:
 	mkdir -p debian/zen-browser/usr/bin
 	ln -sf /opt/zen-browser/zen debian/zen-browser/usr/bin/zen
 
-	# Install desktop entry
+	# Install desktop entry (safely referenced from the injected debian/ folder)
 	mkdir -p debian/zen-browser/usr/share/applications
-	cp -v ../zen-browser/debian/zen.desktop debian/zen-browser/usr/share/applications/zen.desktop
+	cp -v debian/zen.desktop debian/zen-browser/usr/share/applications/zen.desktop
 
 	# Install policies.json (disable auto-update)
 	mkdir -p debian/zen-browser/opt/zen-browser/distribution
-	cp -v ../zen-browser/debian/policies.json debian/zen-browser/opt/zen-browser/distribution/policies.json
+	cp -v debian/policies.json debian/zen-browser/opt/zen-browser/distribution/policies.json
 
 	# Install icons
 	for size in 16 32 48 64 128; do \

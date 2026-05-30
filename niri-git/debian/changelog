@@ -1,32 +1,8 @@
-niri-git (26.04+git20260529.f9f43d8-1) ceres; urgency=medium
+niri-git (26.04+git20260530.0000000-1) unstable; urgency=medium
 
-  * Automated git bump to f9f43d8
-
- -- Nexus Build Bot <actions@github.com>  Fri, 29 May 2026 14:50:15 +0000
-
-niri-git (26.04+git20260528.9bd6c2c-1) ceres; urgency=medium
-
-  * Automated git bump to 9bd6c2c
-
- -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 20:11:59 +0000
-
-niri-git (26.04+git20260528.9a6f310-1) ceres; urgency=medium
-
-  * Automated git bump to 9a6f310
-
- -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 09:53:47 +0000
-
-niri-git (26.04+git20260526.4294948-1) ceres; urgency=medium
-
-  * Automated git bump to 4294948
-
- -- Nexus Build Bot <actions@github.com>  Tue, 26 May 2026 17:11:54 +0000
-
-niri-git (26.04+git20260526.0000000-1) ceres; urgency=medium
-
-  * Initial Devuan-Nexus build.
-  * Built without systemd feature; using elogind/libseat backend.
-  * Enabled dinit user session integration.
+  * Converted to pure Debian Unstable (Sid).
+  * Enabled native systemd integration (default features: dbus, systemd, xdp-gnome-screencast).
+  * Removed Devuan/elogind/dinit patches; using upstream niri-session script as-is.
   * Optimized for x86-64-v3 with -O3.
 
- -- Ackerman <ackerman@nexus.local>  Tue, 26 May 2026 21:38:48 +0600
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 00:00:00 +0000

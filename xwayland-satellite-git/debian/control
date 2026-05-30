@@ -3,27 +3,31 @@ Section: x11
 Priority: optional
 Maintainer: Ackerman <ackerman@nexus.local>
 Build-Depends: debhelper-compat (= 13),
+ build-essential,
  cargo,
  rustc (>= 1.85),
  clang,
  pkg-config,
  libxcb1-dev,
- libxcb-cursor-dev
+ libxcb-util-dev,
+ libxcb-cursor-dev,
+ libsystemd-dev
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
+Homepage: https://github.com/Supreeeme/xwayland-satellite
 
 Package: xwayland-satellite-git
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, xwayland
+Depends: ${shlibs:Depends}, ${misc:Depends}, xwayland, systemd
 Conflicts: xwayland-satellite
 Provides: xwayland-satellite
-Description: Xwayland outside your Wayland (Devuan-optimized git build)
+Description: Xwayland outside your Wayland (Debian systemd build)
  Grants rootless Xwayland integration to any Wayland compositor
  implementing xdg_wm_base and viewporter. This is particularly useful
  for compositors that do not want to implement rootless Xwayland
  themselves (such as niri).
  .
  This package is compiled from the latest git source with optimizations
- for x86-64-v3 and built without systemd dependencies. Niri will
- automatically detect and spawn xwayland-satellite when X11 clients
- connect.
+ for x86-64-v3 and features native systemd integration (sd-notify).
+ Niri will automatically detect and spawn xwayland-satellite when
+ X11 clients connect.

@@ -1,68 +1,7 @@
-noctalia-v5-git (5.0.0+git20260530.5beec2c-1) ceres; urgency=medium
+noctalia-v5-git (5.0.0+git20260530.0000000-1) unstable; urgency=medium
 
-  * Automated git bump to 5beec2c
-
- -- Nexus Build Bot <actions@github.com>  Sat, 30 May 2026 02:33:39 +0000
-
-noctalia-v5-git (5.0.0+git20260529.bbfc136-1) ceres; urgency=medium
-
-  * Automated git bump to bbfc136
-
- -- Nexus Build Bot <actions@github.com>  Fri, 29 May 2026 20:12:45 +0000
-
-noctalia-v5-git (5.0.0+git20260529.9c89685-1) ceres; urgency=medium
-
-  * Automated git bump to 9c89685
-
- -- Nexus Build Bot <actions@github.com>  Fri, 29 May 2026 14:50:16 +0000
-
-noctalia-v5-git (5.0.0+git20260529.0e4bb96-1) ceres; urgency=medium
-
-  * Automated git bump to 0e4bb96
-
- -- Nexus Build Bot <actions@github.com>  Fri, 29 May 2026 02:39:42 +0000
-
-noctalia-v5-git (5.0.0+git20260528.5dab086-1) ceres; urgency=medium
-
-  * Automated git bump to 5dab086
-
- -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 20:12:00 +0000
-
-noctalia-v5-git (5.0.0+git20260528.6fa8377-1) ceres; urgency=medium
-
-  * Automated git bump to 6fa8377
-
- -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 15:37:11 +0000
-
-noctalia-v5-git (5.0.0+git20260528.6df784d-1) ceres; urgency=medium
-
-  * Automated git bump to 6df784d
-
- -- Nexus Build Bot <actions@github.com>  Thu, 28 May 2026 02:35:35 +0000
-
-noctalia-v5-git (5.0.0+git20260527.c90743c-1) ceres; urgency=medium
-
-  * Automated git bump to c90743c
-
- -- Nexus Build Bot <actions@github.com>  Wed, 27 May 2026 20:07:48 +0000
-
-noctalia-v5-git (5.0.0+git20260527.cc1b0a8-1) ceres; urgency=medium
-
-  * Automated git bump to cc1b0a8
-
- -- Nexus Build Bot <actions@github.com>  Wed, 27 May 2026 14:26:21 +0000
-
-noctalia-v5-git (5.0.0+git20260527.22fb36c-1) ceres; urgency=medium
-
-  * Automated git bump to 22fb36c
-
- -- Nexus Build Bot <actions@github.com>  Wed, 27 May 2026 10:39:17 +0000
-
-noctalia-v5-git (5.0.0+git20260527.0000000-1) ceres; urgency=medium
-
-  * Initial Devuan-Nexus build of Noctalia v5 alpha.
-  * Full C++ rewrite using cairo/pango rendering — no Qt6 dependency.
-  * Built without systemd; uses elogind's sd-bus via sdbus-c++.
+  * Converted to pure Debian Unstable (Sid).
+  * Mapped dependencies directly from official Arch PKGBUILD.
   * Optimized for x86-64-v3 with -O3.
 
- -- Ackerman <ackerman@nexus.local>  Tue, 27 May 2026 00:00:00 +0600
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 00:00:00 +0000

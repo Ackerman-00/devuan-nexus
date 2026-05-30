@@ -1,4 +1,4 @@
-name: Devuan Build Relay
+name: Debian Build Relay
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
   build-and-index:
     runs-on: ubuntu-latest
     container:
-      image: devuan/devuan:ceres
+      image: debian:unstable
       options: --privileged
     defaults:
       run:
@@ -23,13 +23,11 @@ jobs:
     steps:
       - name: Install System Utilities
         run: |
-          # Retry loop for mirror inconsistencies (max 3 attempts)
-          # Exits with error if all attempts fail
           set -o pipefail
           for i in 1 2 3; do
             apt-get update
             if apt-get install -y curl git wget build-essential devscripts equivs \
-                               apt-utils gnupg ca-certificates rustc cargo; then
+                               apt-utils dpkg-dev gnupg ca-certificates rustc cargo; then
               echo "System utilities installed successfully on attempt $i."
               exit 0
             fi
@@ -41,7 +39,6 @@ jobs:
 
       - name: Install GitHub CLI
         run: |
-          # Ensure curl is available (install if missing)
           if ! command -v curl &>/dev/null; then
             apt-get update && apt-get install -y curl
           fi
@@ -61,7 +58,7 @@ jobs:
           RUST_VERSION=$(rustc --version | awk '{print $2}')
           REQUIRED="1.85"
           if [ "$(printf '%s\n' "$REQUIRED" "$RUST_VERSION" | sort -V | head -n1)" != "$REQUIRED" ]; then
-            echo "::error::rustc $RUST_VERSION is too old. niri requires >= 1.85"
+            echo "::error::rustc $RUST_VERSION is too old. Some packages require >= 1.85"
             exit 1
           fi
           echo "rustc $RUST_VERSION meets minimum $REQUIRED"
@@ -82,9 +79,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p public/devuan
+          mkdir -p public/debian
           echo ">>> Downloading existing .deb pool..."
-          gh release download rolling -p "*.deb" --repo ${{ github.repository }} --dir public/devuan 2>/dev/null || true
+          gh release download rolling -p "*.deb" --repo ${{ github.repository }} --dir public/debian 2>/dev/null || true
 
       - name: Fetch Latest Source and Build Package
         run: |
@@ -103,17 +100,14 @@ jobs:
             cp -a "$TARGET/debian" build-src/
 
             cd build-src
-
-            echo ">>> Cleaning up legacy compat file and fixing permissions..."
             rm -f debian/compat
             chmod +x debian/rules
 
-            echo ">>> Installing Build Dependencies (Resolving via apt)..."
+            echo ">>> Installing Build Dependencies..."
             mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' debian/control
 
             echo ">>> Compiling Debian Package (.deb)..."
             dpkg-buildpackage -b -uc -us
-
             cd ..
 
           elif [ "$PKG_TYPE" = "deb-repackage" ]; then
@@ -125,10 +119,9 @@ jobs:
 
             echo ">>> Extracting upstream .deb..."
             mkdir -p build-src
-            cd /tmp && ar x upstream.deb data.tar.xz
-            tar xf data.tar.xz -C /__w/devuan-nexus/devuan-nexus/build-src/
-            rm -f /tmp/upstream.deb /tmp/data.tar.xz
-            cd /__w/devuan-nexus/devuan-nexus
+            # dpkg-deb safely extracts ANY compression format (xz, gz, zst) automatically
+            dpkg-deb -x /tmp/upstream.deb build-src/
+            rm -f /tmp/upstream.deb
 
             echo ">>> Injecting Debian metadata..."
             cp -a "$TARGET/debian" build-src/
@@ -142,7 +135,6 @@ jobs:
 
             echo ">>> Repackaging Debian Package (.deb)..."
             dpkg-buildpackage -b -uc -us
-
             cd ..
 
           elif [ "$PKG_TYPE" = "tarball-repackage" ]; then
@@ -150,12 +142,13 @@ jobs:
             TARBALL_URL=$(echo "$TARBALL_URL" | sed "s/\${VERSION}/${BASE_VERSION}/g")
 
             echo ">>> Downloading upstream tarball: $TARBALL_URL"
-            curl -fsSL -o /tmp/upstream.tar.xz "$TARBALL_URL"
+            curl -fsSL -o /tmp/upstream_archive "$TARBALL_URL"
 
             echo ">>> Extracting upstream tarball..."
             mkdir -p build-src
-            tar -xf /tmp/upstream.tar.xz -C build-src/ --strip-components=1
-            rm -f /tmp/upstream.tar.xz
+            # tar -xf auto-detects compression (xz, bz2, gz)
+            tar -xf /tmp/upstream_archive -C build-src/ --strip-components=1
+            rm -f /tmp/upstream_archive
 
             echo ">>> Injecting Debian metadata..."
             cp -a "$TARGET/debian" build-src/
@@ -169,7 +162,6 @@ jobs:
 
             echo ">>> Repackaging Debian Package (.deb)..."
             dpkg-buildpackage -b -uc -us
-
             cd ..
 
           else
@@ -178,21 +170,21 @@ jobs:
           fi
 
           echo ">>> Moving compiled artifacts to public pool..."
-          mv *.deb public/devuan/
+          mv *.deb public/debian/
 
       - name: Generate APT Repository Metadata
         run: |
-          cd public/devuan
+          cd public/debian
           
           cat > apt-release.conf << 'EOF'
           APT::FTPArchive::Release {
-            Origin "Devuan-Nexus";
-            Label "Devuan-Nexus";
-            Suite "rolling";
-            Codename "ceres";
+            Origin "Debian-Nexus";
+            Label "Debian-Nexus";
+            Suite "unstable";
+            Codename "sid";
             Architectures "amd64";
             Components "main";
-            Description "Automated Rolling Devuan Repository";
+            Description "Automated Rolling Debian Repository";
           };
           EOF
           
@@ -211,9 +203,9 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           gh release view rolling --repo "$REPO" 2>/dev/null || \
-            gh release create rolling --repo "$REPO" --title "Devuan Nexus Rolling Binaries" --prerelease
+            gh release create rolling --repo "$REPO" --title "Debian Nexus Rolling Binaries" --prerelease
 
-          cd public/devuan
+          cd public/debian
           
           retry_upload() {
             for i in 1 2 3; do
@@ -251,7 +243,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global --add safe.directory /__w/devuan-nexus/devuan-nexus
-          gh workflow run "Devuan Build Relay" \
+          # Use native GITHUB_WORKSPACE instead of hardcoded /__w/ paths
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          gh workflow run "Debian Build Relay" \
             --ref "${GITHUB_REF_NAME}" \
             -f package_list="${{ env.REMAINING_PKGS }}"

@@ -1,5 +1,5 @@
 # YAML 1.2
-name: Devuan Check Updates
+name: Debian Check Updates
 
 on:
   schedule:
@@ -11,7 +11,7 @@ on:
       - '*/debian/changelog'
 
 concurrency:
-  group: devuan-check-updates-${{ github.ref }}
+  group: debian-check-updates-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
   scan-and-bump:
     runs-on: ubuntu-latest
     container:
-      image: devuan/devuan:ceres
+      image: debian:unstable
     defaults:
       run:
         shell: bash
@@ -94,7 +94,7 @@ jobs:
                 NEW_VERSION="${BASE_VERSION}+git${DATE_STR}.${LATEST_HASH}-1"
 
                 cd "$pkg_name"
-                dch -b -v "$NEW_VERSION" -D ceres --force-distribution "Automated git bump to $LATEST_HASH"
+                dch -b -v "$NEW_VERSION" -D unstable --force-distribution "Automated git bump to $LATEST_HASH"
                 cd ..
 
                 CHANGED_PKGS="$CHANGED_PKGS $pkg_name "
@@ -111,13 +111,13 @@ jobs:
               fi
 
               CURR_VERSION=$(dpkg-parsechangelog -l "$pkg_name/debian/changelog" -S Version)
-              CURR_UPSTREAM=$(echo "$CURR_VERSION" | sed 's/+devuan.*//')
+              CURR_UPSTREAM=$(echo "$CURR_VERSION" | sed 's/+debian.*//')
 
               if [ "$CURR_UPSTREAM" != "$LATEST_TAG" ]; then
                 echo "  [+] New upstream release detected! Bumping $CURR_UPSTREAM → $LATEST_TAG..."
-                NEW_VERSION="${LATEST_TAG}+devuan1"
+                NEW_VERSION="${LATEST_TAG}+debian1"
                 cd "$pkg_name"
-                dch -b -v "$NEW_VERSION" -D ceres --force-distribution "New upstream release $LATEST_TAG"
+                dch -b -v "$NEW_VERSION" -D unstable --force-distribution "New upstream release $LATEST_TAG"
                 # Update BASE_VERSION in nexus.conf so build.yml downloads the correct release
                 sed -i "s/^BASE_VERSION=.*/BASE_VERSION=${LATEST_TAG}/" nexus.conf
                 cd ..
@@ -139,11 +139,11 @@ jobs:
             echo "updates_found=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Trigger Devuan Build Relay
+      - name: Trigger Debian Build Relay
         if: steps.scan.outputs.updates_found == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run "Devuan Build Relay" \
+          gh workflow run "Debian Build Relay" \
             --ref "${{ github.ref_name }}" \
             -f package_list="${{ steps.scan.outputs.package_list }}"

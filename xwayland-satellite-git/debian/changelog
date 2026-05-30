@@ -1,14 +1,8 @@
-xwayland-satellite-git (0.8.1+git20260527.5d1efbc-1) ceres; urgency=medium
+xwayland-satellite-git (0.8.1+git20260530.0000000-1) unstable; urgency=medium
 
-  * Automated git bump to 5d1efbc
-
- -- Nexus Build Bot <actions@github.com>  Wed, 27 May 2026 07:19:20 +0000
-
-xwayland-satellite-git (0.8.1+git20260527.0000000-1) ceres; urgency=medium
-
-  * Initial Devuan-Nexus build.
-  * Built without systemd feature; no systemd service files installed.
+  * Converted to pure Debian Unstable (Sid).
+  * Enabled upstream 'systemd' feature flag for native sd-notify support.
+  * Injected PikaOS sed patch to fix /usr/local/bin -> /usr/bin ExecStart path.
   * Optimized for x86-64-v3 with -O3.
-  * Grants rootless Xwayland integration to any wlroots-based compositor.
 
- -- Ackerman <ackerman@nexus.local>  Tue, 27 May 2026 00:00:00 +0600
+ -- Ackerman <ackerman@nexus.local>  Sat, 30 May 2026 00:00:00 +0000

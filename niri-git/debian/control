@@ -14,7 +14,7 @@ Build-Depends: debhelper-compat (= 13),
  libwayland-dev,
  libinput-dev,
  libdbus-1-dev,
- libelogind-dev,
+ libsystemd-dev,
  libseat-dev,
  libpipewire-0.3-dev,
  libpango1.0-dev,
@@ -22,25 +22,25 @@ Build-Depends: debhelper-compat (= 13),
  pkg-config
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
+Homepage: https://github.com/YaLTeR/niri
 
 Package: niri-git
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, elogind, libpam-elogind, libwayland-server0, libwayland-client0, seatd, dbus
-Recommends: mesa-dri-drivers, mesa-libegl
-Suggests: xdg-desktop-portal-gnome, xdg-desktop-portal-gtk, gnome-keyring,
-          xwayland-satellite-git, dinit, mako, alacritty, fuzzel
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ systemd,
+ dbus-user-session,
+ libwayland-server0
+Recommends: mesa-dri-drivers, mesa-libegl, xdg-desktop-portal-gnome, gnome-keyring,
+ xwayland-satellite | xwayland-satellite-git
+Suggests: xdg-desktop-portal-gtk, mako-notifier, alacritty, fuzzel
 Conflicts: niri
 Provides: niri
-Description: A scrollable-tiling Wayland compositor (Devuan-optimized build)
+Description: Scrollable-tiling Wayland compositor (Debian systemd build)
  Niri is a scrollable-tiling Wayland compositor. Windows are arranged in
  columns on an infinite strip going to the right. Every monitor has its own
  separate window strip.
  .
- This package is compiled from the latest git source with optimizations
- for x86-64-v3 and built without systemd dependencies. It integrates with
- elogind/libseat for session management and supports dinit for session
- startup on Devuan.
- .
- For systems using sysvinit, openrc, or runit, the niri-session launcher
- automatically falls back to dbus-run-session for proper D-Bus session
- bus creation.
+ This package is compiled from the latest git source with native optimizations
+ for x86-64-v3 and fully integrates into the standard systemd-logind seat
+ management architecture. Native Xwayland support is provided via
+ xwayland-satellite starting from niri 25.08.
