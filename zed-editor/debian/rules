@@ -14,20 +14,27 @@ override_dh_auto_install:
 	mkdir -p debian/zed-editor/usr/lib/zed
 	mkdir -p debian/zed-editor/usr/share
 
-	# 1. Install the CLI exactly as 'zed' (what upstream expects)
-	install -m0755 bin/zed debian/zed-editor/usr/bin/zed
+	# 1. Move upstream's CLI to /usr/lib/zed so we can wrap it
+	install -m0755 bin/zed debian/zed-editor/usr/lib/zed/zed-cli
 
-	# 2. Install the main editor binary to /usr/lib/zed/zed-editor
+	# 2. Install the main editor binary
 	install -m0755 libexec/zed-editor debian/zed-editor/usr/lib/zed/zed-editor
 
-	# 3. Install upstream's bundled libraries next to the main binary
+	# 3. Install upstream's bundled libraries
 	cp -a lib/* debian/zed-editor/usr/lib/zed/ || true
 
-	# 4. Install upstream's pre-generated icons and .desktop files directly
+	# 4. Create the wrapper script to disable auto-updates (mirrors your Void template)
+	echo '#!/bin/sh' > debian/zed-editor/usr/bin/zed
+	echo 'export ZED_UPDATE_EXPLANATION="Updates are handled by Debian Nexus. Please use sudo apt upgrade."' >> debian/zed-editor/usr/bin/zed
+	echo 'exec /usr/lib/zed/zed-cli "$$@"' >> debian/zed-editor/usr/bin/zed
+	chmod 0755 debian/zed-editor/usr/bin/zed
+
+	# 5. Install upstream's pre-generated icons and .desktop files
+	# (The .desktop file calls 'zed %U', which will now hit our wrapper script!)
 	cp -a share/icons debian/zed-editor/usr/share/
 	cp -a share/applications debian/zed-editor/usr/share/
 
-	# 5. Install licenses
+	# 6. Install licenses
 	install -d debian/zed-editor/usr/share/doc/zed-editor
 	install -m0644 licenses.md debian/zed-editor/usr/share/doc/zed-editor/copyright || true
 
