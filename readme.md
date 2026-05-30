@@ -1,7 +1,7 @@
 ## Add the unsigned rolling repo
 ```
-echo 'deb [trusted=yes] https://github.com/Ackerman-00/devuan-nexus/releases/download/rolling/ ./' \
-  | sudo tee /etc/apt/sources.list.d/devuan-nexus.list
+echo 'deb [trusted=yes] https://github.com/Ackerman-00/debian-nexus/releases/download/rolling/ ./' \
+  | sudo tee /etc/apt/sources.list.d/debian-nexus.list
 ```
 
 ## Update and verify
