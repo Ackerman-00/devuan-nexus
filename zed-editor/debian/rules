@@ -9,7 +9,6 @@ export DEB_CXXFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3 -ffat-lto-objects
 export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3 --remap-path-prefix $(CURDIR)=/
 
 # Force system libraries instead of vendored sources
-export LIBGIT2_NO_VENDOR = 1
 export LIBSQLITE3_SYS_USE_PKG_CONFIG = 1
 export ZSTD_SYS_USE_PKG_CONFIG = 1
 
