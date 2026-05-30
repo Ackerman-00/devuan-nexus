@@ -1,61 +1,52 @@
 #!/usr/bin/make -f
 
 export DH_VERBOSE = 1
-export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-
-# x86-64-v3 optimizations + LTO fat objects (from Arch PKGBUILD)
-export DEB_CFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3 -ffat-lto-objects
-export DEB_CXXFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3 -ffat-lto-objects
-export RUSTFLAGS = -C target-cpu=x86-64-v3 -C opt-level=3 --remap-path-prefix $(CURDIR)=/
-
-# Force system libraries instead of vendored sources
-export LIBSQLITE3_SYS_USE_PKG_CONFIG = 1
-export ZSTD_SYS_USE_PKG_CONFIG = 1
-
-# Zed specific env vars
-export ZED_UPDATE_EXPLANATION = Updates are handled by Debian Nexus
-export RELEASE_VERSION = 1.4.4
-export PROTOC = /usr/bin/protoc
-export PROTOC_INCLUDE = /usr/include
-
-# Desktop file generation vars (mapped from Arch PKGBUILD)
-export DO_STARTUP_NOTIFY = true
-export APP_ICON = zed
-export APP_NAME = Zed
-export APP_CLI = zeditor
-export APP_ID = dev.zed.Zed
-export APP_ARGS = %U
 
 %:
 	dh $@
 
 override_dh_auto_build:
-	# Generate desktop file using envsubst
-	envsubst < "crates/zed/resources/zed.desktop.in" > dev.zed.Zed.desktop
-	
-	# Build CLI and editor
-	cargo build --release --package zed --package cli
+	# Nothing to build — tarball repackage only
+	true
 
 override_dh_auto_install:
+	# The workflow extracts the tarball into the build root.
+	# Zed's tarball contains the 'zed' CLI and the main editor binary/resources.
+	
+	mkdir -p debian/zed-editor/usr/lib/zed
 	mkdir -p debian/zed-editor/usr/bin
-	mkdir -p debian/zed-editor/usr/libexec
 	mkdir -p debian/zed-editor/usr/share/applications
 	mkdir -p debian/zed-editor/usr/share/icons/hicolor/512x512/apps
 
-	# Install CLI as 'zeditor'
-	install -m0755 target/release/cli debian/zed-editor/usr/bin/zeditor
+	# Move all upstream files into /usr/lib/zed (excluding the injected 'debian' folder)
+	rsync -a --exclude='debian' ./ debian/zed-editor/usr/lib/zed/
 	
-	# Install main binary to /usr/libexec/zed-editor so the CLI can find it via ../../libexec/zed-editor
-	install -m0755 target/release/zed debian/zed-editor/usr/libexec/zed-editor
+	# Symlink the CLI to /usr/bin/zeditor (as per official packager notes to avoid conflicts)
+	ln -sf /usr/lib/zed/zed debian/zed-editor/usr/bin/zeditor
 	
-	# Install generated desktop file and icon
-	install -m0644 dev.zed.Zed.desktop debian/zed-editor/usr/share/applications/dev.zed.Zed.desktop
-	install -m0644 crates/zed/resources/app-icon.png debian/zed-editor/usr/share/icons/hicolor/512x512/apps/zed.png
+	# Generate the .desktop file using envsubst (as per official Zed packager docs)
+	export APP_ID="dev.zed.Zed"
+	export APP_NAME="Zed"
+	export APP_CLI="zeditor"
+	export APP_ICON="zed"
+	export APP_ARGS="%U"
+	export DO_STARTUP_NOTIFY="true"
+	
+	# The tarball includes the desktop template in resources/
+	if [ -f debian/zed-editor/usr/lib/zed/resources/zed.desktop.in ]; then \
+		envsubst < debian/zed-editor/usr/lib/zed/resources/zed.desktop.in > debian/zed-editor/usr/share/applications/dev.zed.Zed.desktop; \
+	fi
+	chmod 644 debian/zed-editor/usr/share/applications/dev.zed.Zed.desktop || true
+	
+	# Install icon from upstream resources
+	if [ -f debian/zed-editor/usr/lib/zed/resources/app-icon.png ]; then \
+		install -m0644 debian/zed-editor/usr/lib/zed/resources/app-icon.png debian/zed-editor/usr/share/icons/hicolor/512x512/apps/zed.png; \
+	fi
 
 override_dh_dwz:
-	# Skip dwz for Rust binaries
+	# Skip dwz for pre-compiled Rust binaries
 	true
 
 override_dh_strip:
-	# Keep minimal debug info
-	dh_strip --dbgsym-migration='zed-editor (<< 1.4.4+)'
+	# Do not strip the upstream binaries
+	dh_strip --no-automatic-dbgsym
