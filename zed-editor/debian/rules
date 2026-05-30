@@ -35,10 +35,16 @@ override_dh_auto_install:
 	install -d debian/zed-editor/usr/share/doc/zed-editor
 	install -m0644 licenses.md debian/zed-editor/usr/share/doc/zed-editor/copyright || true
 
+override_dh_shlibdeps:
+	# Skip shlibdeps: upstream ships prebuilt binaries with bundled private libraries 
+	# (like libffi.so.7 and libpcre.so.3) that do not exist in Debian Sid.
+	# All necessary runtime dependencies are declared manually in debian/control.
+	true
+
 override_dh_dwz:
 	# Skip dwz for pre-compiled Rust binaries
 	true
 
 override_dh_strip:
-	# Do not strip the upstream binaries
-	dh_strip --no-automatic-dbgsym
+	# Do not strip the upstream binaries or bundled .so files
+	true
