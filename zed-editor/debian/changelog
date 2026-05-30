@@ -1,3 +1,9 @@
+zed-editor (1.4.4+debian1) unstable; urgency=medium
+
+  * New upstream release 1.4.4
+
+ -- Nexus Build Bot <actions@github.com>  Sat, 30 May 2026 18:14:37 +0000
+
 zed-editor (0.160.0+debian1) unstable; urgency=medium
 
   * Switch to tarball-repackage to bypass GCC 14 aws-lc-rs linker bugs.
