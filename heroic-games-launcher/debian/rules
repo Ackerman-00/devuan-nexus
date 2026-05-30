@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# Nothing to build — binary repackage only
+	true
+
+# Skip dwz: upstream Electron binaries have no/partial debug info
+override_dh_dwz:
+
+# Skip shlibdeps: upstream ships prebuilt Electron binaries with bundled libraries.
+override_dh_shlibdeps:
+	@echo "Skipping dh_shlibdeps for repackaged upstream binaries."
+
+override_dh_auto_install:
+	# Files were already extracted by the workflow (dpkg-deb -x) into the current directory.
+	# The upstream .deb extracts directly to opt/ and usr/.
+	
+	# Install application files
+	mkdir -p debian/heroic-games-launcher
+	cp -a opt debian/heroic-games-launcher/ || true
+	cp -a usr debian/heroic-games-launcher/ || true
+	
+	# Ensure the main binary is executable
+	if [ -f debian/heroic-games-launcher/opt/Heroic/heroic ]; then \
+		chmod 755 debian/heroic-games-launcher/opt/Heroic/heroic; \
+	fi
+
+override_dh_fixperms:
+	# dh_fixperms strips SUID bits by default for security reasons.
+	# We must exclude chrome-sandbox so it retains the 4755 SUID bit required by Electron.
+	dh_fixperms -Xchrome-sandbox
+	if [ -f debian/heroic-games-launcher/opt/Heroic/chrome-sandbox ]; then \
+		chmod 4755 debian/heroic-games-launcher/opt/Heroic/chrome-sandbox; \
+	fi

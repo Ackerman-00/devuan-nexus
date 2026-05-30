@@ -1,0 +1,29 @@
+Source: protonplus
+Section: games
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+ meson,
+ ninja-build,
+ valac,
+ libgtk-4-dev,
+ libadwaita-1-dev,
+ libjson-glib-dev,
+ libarchive-dev,
+ libgee-0.8-dev,
+ libsoup-3.0-dev,
+ appstream
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/Vysp3r/ProtonPlus
+
+Package: protonplus
+Architecture: linux-any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Simple and powerful manager for Wine, Proton, DXVK and VKD3D
+ ProtonPlus is a modern compatibility tools manager for Linux.
+ It allows you to easily manage and update various compatibility tools
+ like Proton, Wine, DXVK, and VKD3D directly from a beautiful GTK4/Libadwaita UI.
+ .
+ This package is compiled from the latest upstream tarball with optimizations
+ for x86-64-v3.

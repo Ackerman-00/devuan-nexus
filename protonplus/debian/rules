@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# x86-64-v3 optimizations (Vala compiles down to C, so CFLAGS apply)
+export DEB_CFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3
+export DEB_CXXFLAGS_MAINT_APPEND = -march=x86-64-v3 -O3
+
+%:
+	dh $@ --buildsystem=meson
