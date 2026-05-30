@@ -10,38 +10,30 @@ override_dh_auto_build:
 	true
 
 override_dh_auto_install:
-	# The workflow extracts the tarball into the build root.
-	# Zed's tarball contains the 'zed' CLI and the main editor binary/resources.
+	# The workflow extracts the tarball with --strip-components=1 into the build root.
+	# Upstream's `script/bundle-linux` already perfectly structures the tarball.
 	
-	mkdir -p debian/zed-editor/usr/lib/zed
 	mkdir -p debian/zed-editor/usr/bin
-	mkdir -p debian/zed-editor/usr/share/applications
-	mkdir -p debian/zed-editor/usr/share/icons/hicolor/512x512/apps
+	mkdir -p debian/zed-editor/usr/lib/zed
+	mkdir -p debian/zed-editor/usr/share
 
-	# Move all upstream files into /usr/lib/zed (excluding the injected 'debian' folder)
-	rsync -a --exclude='debian' ./ debian/zed-editor/usr/lib/zed/
-	
-	# Symlink the CLI to /usr/bin/zeditor (as per official packager notes to avoid conflicts)
-	ln -sf /usr/lib/zed/zed debian/zed-editor/usr/bin/zeditor
-	
-	# Generate the .desktop file using envsubst (as per official Zed packager docs)
-	export APP_ID="dev.zed.Zed"
-	export APP_NAME="Zed"
-	export APP_CLI="zeditor"
-	export APP_ICON="zed"
-	export APP_ARGS="%U"
-	export DO_STARTUP_NOTIFY="true"
-	
-	# The tarball includes the desktop template in resources/
-	if [ -f debian/zed-editor/usr/lib/zed/resources/zed.desktop.in ]; then \
-		envsubst < debian/zed-editor/usr/lib/zed/resources/zed.desktop.in > debian/zed-editor/usr/share/applications/dev.zed.Zed.desktop; \
-	fi
-	chmod 644 debian/zed-editor/usr/share/applications/dev.zed.Zed.desktop || true
-	
-	# Install icon from upstream resources
-	if [ -f debian/zed-editor/usr/lib/zed/resources/app-icon.png ]; then \
-		install -m0644 debian/zed-editor/usr/lib/zed/resources/app-icon.png debian/zed-editor/usr/share/icons/hicolor/512x512/apps/zed.png; \
-	fi
+	# 1. Install the CLI as 'zeditor' to avoid Debian 'zed' package conflicts
+	install -m0755 bin/zed debian/zed-editor/usr/bin/zeditor
+
+	# 2. Install the main editor binary to /usr/lib/zed/zed-editor
+	# (The CLI at /usr/bin/zeditor will correctly resolve ../../lib/zed/zed-editor)
+	install -m0755 libexec/zed-editor debian/zed-editor/usr/lib/zed/zed-editor
+
+	# 3. Install upstream's bundled libraries next to the main binary
+	cp -a lib/* debian/zed-editor/usr/lib/zed/ || true
+
+	# 4. Install upstream's pre-generated icons and .desktop files directly
+	cp -a share/icons debian/zed-editor/usr/share/
+	cp -a share/applications debian/zed-editor/usr/share/
+
+	# 5. Install licenses
+	install -d debian/zed-editor/usr/share/doc/zed-editor
+	install -m0644 licenses.md debian/zed-editor/usr/share/doc/zed-editor/copyright || true
 
 override_dh_dwz:
 	# Skip dwz for pre-compiled Rust binaries
