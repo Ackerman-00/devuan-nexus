@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Ackerman <ackerman@nexus.local>
 Build-Depends: debhelper-compat (= 13),
  dh-python,
+ pybuild-plugin-pyproject,
  python3-all,
- python3-setuptools,
  python3-cbor2,
  python3-xdg,
  python3-xxhash,
