@@ -2,7 +2,7 @@ Source: zed-editor
 Section: editors
 Priority: optional
 Maintainer: Ackerman <ackerman@nexus.local>
-Build-Depends: debhelper-compat (= 13), gettext-base, rsync
+Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://zed.dev
@@ -27,6 +27,7 @@ Depends: ${misc:Depends},
 Recommends: mesa-vulkan-drivers, vulkan-tools, nodejs, npm
 Suggests: org.freedesktop.secrets | gnome-keyring
 Conflicts: zed
+Replaces: zed
 Provides: zed
 Description: High-performance, multiplayer code editor (Official Tarball Repackage)
  Zed is a modern open-source code editor, built from the ground up in Rust
@@ -35,5 +36,5 @@ Description: High-performance, multiplayer code editor (Official Tarball Repacka
  This package repackages the official upstream Linux tarball for Debian,
  ensuring native Wayland/X11 support and bypassing source-build compiler bugs.
  .
- Note: The CLI binary is named 'zeditor' to avoid conflicts with the
- existing Debian 'zed' package (an OCaml text editor).
+ Note: This package provides the 'zed' command and intentionally conflicts
+ with the Debian 'zed' package (which is an unrelated OCaml text editor).
