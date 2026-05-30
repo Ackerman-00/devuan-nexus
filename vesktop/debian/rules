@@ -34,7 +34,8 @@ override_dh_auto_install:
 	mkdir -p debian/vesktop/usr/bin
 	ln -sf /opt/Vesktop/vesktop debian/vesktop/usr/bin/vesktop
 
-	# Set sandbox permissions
-	if [ -f debian/vesktop/opt/Vesktop/chrome-sandbox ]; then \
-		chmod 4755 debian/vesktop/opt/Vesktop/chrome-sandbox; \
-	fi
+override_dh_fixperms:
+	# dh_fixperms strips SUID bits by default for security reasons.
+	# We must exclude chrome-sandbox so it retains the 4755 SUID bit required by Electron.
+	dh_fixperms -Xchrome-sandbox
+	chmod 4755 debian/vesktop/opt/Vesktop/chrome-sandbox
