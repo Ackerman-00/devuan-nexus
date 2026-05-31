@@ -5,7 +5,7 @@ Maintainer: Ackerman <ackerman@nexus.local>
 Build-Depends: debhelper-compat (= 13),
  meson,
  ninja-build,
- pkg-config,
+ pkgconf,
  g++,
  libsdbus-c++-dev,
  libwayland-dev,
