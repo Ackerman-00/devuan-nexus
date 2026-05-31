@@ -26,8 +26,12 @@ jobs:
           set -o pipefail
           for i in 1 2 3; do
             apt-get update
+            # CRITICAL FIX: Pre-install systemd-sysusers to prevent openssh-client 
+            # dependency breakage when the minimal image swaps out systemd-standalone-sysusers.
+            # Added pkgconf as pkg-config is transitional in Sid and causes resolver ambiguity.
             if apt-get install -y curl git wget build-essential devscripts equivs \
-                               apt-utils dpkg-dev gnupg ca-certificates rustc cargo; then
+                               apt-utils dpkg-dev gnupg ca-certificates rustc cargo \
+                               systemd-sysusers pkgconf; then
               echo "System utilities installed successfully on attempt $i."
               exit 0
             fi
