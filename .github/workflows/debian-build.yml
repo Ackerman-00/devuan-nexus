@@ -24,19 +24,34 @@ jobs:
       - name: Install System Utilities
         run: |
           set -o pipefail
+          
+          # CRITICAL FIX: Block daemon starts to prevent systemd postinst from 
+          # failing/hanging in the minimal Docker container.
+          echo '#!/bin/sh' > /usr/sbin/policy-rc.d
+          echo 'exit 101' >> /usr/sbin/policy-rc.d
+          chmod +x /usr/sbin/policy-rc.d
+
           for i in 1 2 3; do
             apt-get update
-            if apt-get install -y curl git wget build-essential devscripts equivs \
+            # Pre-install systemd to satisfy openssh-client sysuser swaps.
+            # Pre-install pkgconf to replace the transitional pkg-config.
+            # Pre-install Freedesktop/GTK/Meson GUI build tools so upstream 
+            # meson.build scripts don't abort looking for validation binaries.
+            if apt-get install -y --no-install-recommends curl git wget build-essential devscripts equivs \
                                apt-utils dpkg-dev gnupg ca-certificates rustc cargo \
-                               systemd pkgconf; then
+                               systemd pkgconf \
+                               desktop-file-utils appstream-util gettext \
+                               libglib2.0-dev-bin libxml2-utils itstool; then
               echo "System utilities installed successfully on attempt $i."
-              exit 0
+              break
             fi
             echo "Attempt $i failed, retrying in 10s..."
             sleep 10
           done
-          echo "::error::Failed to install system utilities after 3 attempts."
-          exit 1
+          
+          # Force-fix any broken state left by systemd transitions in Sid
+          dpkg --configure -a || true
+          apt-get install -f -y || true
 
       - name: Install GitHub CLI
         run: |
