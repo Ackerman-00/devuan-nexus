@@ -26,6 +26,8 @@ Build-Depends: debhelper-compat (= 13),
  libjemalloc-dev,
  libglvnd-dev,
  libwebp-dev,
+ libqalculate-dev,
+ libxml2-dev,
  git
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
