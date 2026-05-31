@@ -75,13 +75,29 @@ jobs:
           echo "REMAINING_PKGS=$REMAINING" >> "$GITHUB_ENV"
           echo ">>> Building $TARGET_PKG (remaining: $REMAINING)"
 
-      - name: Restore Rolling Release Binaries
+      - name: Restore Rolling Release Binaries & Setup Local APT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p public/debian
           echo ">>> Downloading existing .deb pool..."
           gh release download rolling -p "*.deb" --repo ${{ github.repository }} --dir public/debian 2>/dev/null || true
+
+          if ls public/debian/*.deb 1> /dev/null 2>&1; then
+            echo ">>> Generating local APT repository metadata..."
+            cd public/debian
+            apt-ftparchive packages . > Packages
+            gzip -k -f Packages
+            apt-ftparchive release . > Release
+            cd ../..
+            
+            echo ">>> Adding local repository to APT sources..."
+            # This tells apt-get to look in your downloaded pool for missing dependencies!
+            echo "deb [trusted=yes] file:${GITHUB_WORKSPACE}/public/debian ./" > /etc/apt/sources.list.d/local-nexus.list
+            apt-get update
+          else
+            echo ">>> No existing .deb files found in rolling release."
+          fi
 
       - name: Fetch Latest Source and Build Package
         run: |
@@ -119,7 +135,6 @@ jobs:
 
             echo ">>> Extracting upstream .deb..."
             mkdir -p build-src
-            # dpkg-deb safely extracts ANY compression format (xz, gz, zst) automatically
             dpkg-deb -x /tmp/upstream.deb build-src/
             rm -f /tmp/upstream.deb
 
@@ -146,7 +161,6 @@ jobs:
 
             echo ">>> Extracting upstream tarball..."
             mkdir -p build-src
-            # tar -xf auto-detects compression (xz, bz2, gz)
             tar -xf /tmp/upstream_archive -C build-src/ --strip-components=1
             rm -f /tmp/upstream_archive
 
@@ -243,7 +257,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Use native GITHUB_WORKSPACE instead of hardcoded /__w/ paths
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           gh workflow run "Debian Build Relay" \
             --ref "${GITHUB_REF_NAME}" \
