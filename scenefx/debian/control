@@ -1,0 +1,41 @@
+Source: scenefx
+Section: libs
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+               meson,
+               ninja-build,
+               pkgconf,
+               libwlroots-0.19-dev,
+               libwayland-dev,
+               wayland-protocols,
+               libegl-dev,
+               libgles-dev,
+               libdrm-dev,
+               libpixman-1-dev
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/wlrfx/scenefx
+
+Package: libscenefx-0.4
+Architecture: linux-any
+Multi-Arch: same
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Provides: libscenefx
+Description: A drop-in replacement for the wlroots scene API that allows wayland compositors to render surfaces with eye-candy effects
+ SceneFX is a project that takes the scene api and replaces the wlr renderer
+ with our own fx renderer, capable of rendering surfaces with eye-candy effects
+ including blur, shadows, and rounded corners, while maintaining the benefits
+ of simplicity gained from using the scene api.
+
+Package: libscenefx-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Depends: ${misc:Depends}, libscenefx-0.4 (= ${binary:Version})
+Description: A drop-in replacement for the wlroots scene API - Dev package
+ SceneFX is a project that takes the scene api and replaces the wlr renderer
+ with our own fx renderer, capable of rendering surfaces with eye-candy effects
+ including blur, shadows, and rounded corners.
+ .
+ This package contains the development files.

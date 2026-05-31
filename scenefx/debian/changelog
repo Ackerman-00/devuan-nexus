@@ -1,0 +1,6 @@
+scenefx (0.4.1+debian1) unstable; urgency=medium
+
+  * Initial Debian Unstable packaging.
+  * Required as a core dependency for mangowm/mangowc.
+
+ -- Ackerman <ackerman@nexus.local>  Sat, 31 May 2026 00:00:00 +0000

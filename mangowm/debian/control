@@ -1,0 +1,57 @@
+Source: mangowm
+Section: x11
+Priority: optional
+Maintainer: Ackerman <ackerman@nexus.local>
+Build-Depends: debhelper-compat (= 13),
+               meson,
+               ninja-build,
+               pkgconf,
+               libwlroots-0.19-dev,
+               libscenefx-dev,
+               libwayland-dev,
+               wayland-protocols,
+               libpixman-1-dev,
+               libseat-dev,
+               libinput-dev,
+               libdrm-dev,
+               libxkbcommon-dev,
+               libpcre2-dev,
+               libliftoff-dev,
+               libdisplay-info-dev,
+               libcjson-dev,
+               libegl-dev,
+               libgles-dev,
+               libxcb1-dev,
+               libxcb-icccm4-dev,
+               libxcb-xkb-dev,
+               libxcb-errors-dev,
+               libxcb-render-util0-dev,
+               hwdata
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/mangowm/mango
+
+Package: mangowm
+Architecture: linux-any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Suggests: waybar, foot, fuzzel, swaybg, swaylock, swayidle
+Provides: mangowc, wayland-compositor
+Conflicts: mangowc
+Replaces: mangowc
+Description: Lightweight and fast Wayland compositor based on dwl
+ Mango is a Wayland compositor that builds upon the lightweight and fast
+ philosophy of dwl. It provides smooth animations, excellent xwayland support,
+ flexible window layouts, and rich window states without compromising on
+ functionality or performance.
+ .
+ Features include tag-based workspaces, sway-like scratchpads, IPC support,
+ and window effects like blur and shadows via scenefx.
+
+Package: mangowc
+Architecture: all
+Section: oldlibs
+Priority: optional
+Depends: ${misc:Depends}, mangowm
+Description: Transitional package for mangowm
+ This is a transitional package to ease the upgrade from mangowc to mangowm.
+ It can be safely removed.
